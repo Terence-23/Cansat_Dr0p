@@ -1,2 +1,2 @@
 # Cansat
-programs for data collection, communication and groud data analysis for our Cansat 
+programs for data collection, communication and ground data analysis for our Cansat 
