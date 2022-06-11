@@ -1,7 +1,62 @@
 import sys
+import threading
 import numpy as np
 import logging as log
 import os
+
+# Constants:
+# g -earth acceleration
+G = 9.80665
+# air - air density constant
+AIR = 287.05
+# m - Mass of the cansat
+M = .5
+# CA - drag coefficient * Area/2
+CA = 5
+# FS - fall speed of cansat
+FS = 5
+
+results = []
+
+
+class calcPoint (threading.Thread):
+
+    def __init__(self, id, vec, data, canSatSpeed=[0, 0, -FS]) -> None:
+        threading.Thread.__init__(self)
+        self.vec = vec
+        self.data = data
+        self.id = id
+        self.canSatSpeed = canSatSpeed
+
+    def run(self):
+        wind.info(f"Strating thread: {self.id}")
+        wind.debug(f"")
+        airDens = airDensity(self.data[-1], self.data[-2])
+        force = M * (vecLen(self.vec) + G)
+        speed = airSpeed(force, airDens)
+        wynVec = [(i * speed / vecLen(self.vec)) + j for i,
+                  j in zip(self.vec, self.canSatSpeed)]
+        wynVec[-1] += FS
+        wyn = (self.id, wynVec)
+        results.append(wyn)
+        wind.info(f"Ending thread: {self.id}")
+
+
+def airSpeed(force, airDensity):
+    speed = np.sqrt(CA * airDensity/force)
+    return speed
+
+
+def vecLen(vec):
+    # Calculate lenght of a vector
+    return(np.sqrt(vec[0]**2 + vec[1] ** 2 + vec[2] ** 2))
+
+
+def airDensity(pressure, temp):
+    # pressure - unit Pascal
+    # temperature - unit Kelwin
+    dens = pressure / (AIR * temp)
+    return dens
 
 
 def multiplyMat(matrix1, matrix2):
@@ -76,16 +131,50 @@ def getData(fPath):
 
 def rotateData(data, isDeg=True):
     rotated = []
+    pData = []
     for i in data:
         vec = i[0:3]
         x, y, z = i[3:6]
         log.debug("Rotating vector")
-        log.debug(x, y, z)
+        log.debug(f"x: {x}, y: {y}, z: {z}")
         vec = rotateVec(vec, -x, -y, -z, isDeg)
         rotated.append(vec)
+        pData.append(i[3:])
     wind.debug(rotated[0])
-    return rotated
-    
+    return rotated, pData
+
+
+def calcWindSpeed():
+
+    # expected data format: acceleration x;y;z  world rotaiton x;y;z in degrees
+    data = getData(os.getcwd() + "/data/test.data")
+    if len(data) < 1:
+        raise ValueError("No data read from selected file")
+
+    # rotating data to world axis
+
+    rotated, data = rotateData(data)
+    threads = []
+    # processing each data point indiwidually
+    id = 0
+    for i, j in zip(rotated, data):
+        threads.append(calcPoint(id, i, j))
+        threads[-1].start()
+        id += 1
+
+    for i in threads:
+        i.join()
+    wind.info("All threads finished.")
+    wind.info(results)
+    results.sort()
+    wind.info("Writing results specified to output file")
+    for i in results:
+        data = ""
+        for j in i[1]:
+            data += str(j) + ';'
+        data = data[:-1]
+        data += '\n'
+        oFile.write(data)
 
 
 if __name__ == "__main__":
@@ -93,20 +182,40 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("path", nargs='?', default="data/test.data",
                         help="path to data file - absolute or local, default: data/test.data")
+    parser.add_argument("-o", "--output", default=sys.stdout,
+                        help="data output, default: stdout")
     parser.add_argument("-l", "--log", default="info",
                         help="Level of logging. Available values: debug, info, warning, error")
     args = parser.parse_args()
+    # data path
     if args.path[0] == "/" \
             or args.path[1] == ':' \
             or args.path[0:2] == "~/":
         dPath = args.path
     elif args.path[0:2] == "./":
-        dPath = os.getcwd() + args.path[2:]
+        dPath = os.getcwd() + args.path[1:]
     elif args.path[0:3] == "../":
         log.error("try using absolute path")
         sys.exit()
     else:
-        dPath = os.getcwd() + args.path
+        dPath = os.getcwd() + '/' + args.path
+
+    # output path
+    if args.output == sys.stdout:
+        oFile = sys.stdout
+    else:
+        if args.path[0] == "/" \
+                or args.path[1] == ':' \
+                or args.path[0:2] == "~/":
+            oFile = open(args.output, "w")
+        elif args.path[0:2] == "./":
+            oFile = open(os.getcwd() + args.output[1:], "w")
+
+        elif args.path[0:3] == "../":
+            log.error("try using absolute path")
+            sys.exit()
+        else:
+            oFile = open(os.getcwd() + '/' + args.output, 'w')
 
     # Log setup
     loglevel = args.log
@@ -119,11 +228,4 @@ if __name__ == "__main__":
     wind.setLevel(numeric_level)
     log.info("Program start")
     # Log ready
-
-    # expected data format: acceleration x;y;z  world rotaiton x;y;z in degrees
-    data = getData(os.getcwd() + "/data/test.data")
-    if len(data) < 1:
-        raise ValueError("No data read from selected file")
-
-    # rotating data to world axis
-    rotateData(data)
+    calcWindSpeed()
