@@ -6,13 +6,13 @@ import os
 
 # Constants:
 # g -earth acceleration
-G = 9.80665
+G = 10 #9.80665
 # air - air density constant
 AIR = 287.05
 # m - Mass of the cansat
-M = .5
+M = 1.5
 # CA - drag coefficient * Area/2
-CA = 5
+CA = 1
 # FS - fall speed of cansat
 FS = 5
 
@@ -32,7 +32,14 @@ class calcPoint (threading.Thread):
         wind.info(f"Strating thread: {self.id}")
         wind.debug(f"")
         airDens = airDensity(self.data[-1], self.data[-2])
-        force = M * (vecLen(self.vec) + G)
+        wind.debug(self.vec)
+        # may be a problem
+        self.vec[2] += G
+        wind.debug(vecLen(self.vec))
+        
+        force = M * vecLen(self.vec)
+        self.vec[2] -= G
+        wind.debug(f"force: {force}")
         speed = airSpeed(force, airDens)
         wynVec = [(i * speed / vecLen(self.vec)) + j for i,
                   j in zip(self.vec, self.canSatSpeed)]
@@ -43,7 +50,13 @@ class calcPoint (threading.Thread):
 
 
 def airSpeed(force, airDensity):
-    speed = np.sqrt(CA * airDensity/force)
+    wind.debug("calc Air speed")
+    wind.debug(airDensity)
+    wind.debug(force)
+    tmp = CA * airDensity/force
+    wind.debug(tmp)
+    
+    speed = np.sqrt(tmp)
     return speed
 
 
@@ -161,10 +174,13 @@ def calcWindSpeed():
         threads.append(calcPoint(id, i, j))
         threads[-1].start()
         id += 1
+        if id >= 4000:
+            threads[0].join()
+            threads.pop(0)
 
     for i in threads:
         i.join()
-    wind.info("All threads finished.")
+    wind.info(f"All({id + 1}) threads finished.")
     wind.info(results)
     results.sort()
     wind.info("Writing results specified to output file")
@@ -223,7 +239,7 @@ if __name__ == "__main__":
     if not isinstance(numeric_level, int):
         raise ValueError('Invalid log level: %s' % loglevel)
 
-    log.basicConfig(level=numeric_level, filename=args.path + '.log')
+    log.basicConfig(level=numeric_level, filename=args.path + '.log', filemode='w')
     wind = log.getLogger("wind")
     wind.setLevel(numeric_level)
     log.info("Program start")

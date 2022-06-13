@@ -1,3 +1,5 @@
+#! /bin/python3
+
 import os
 import random as r
 
@@ -22,14 +24,30 @@ def genDataPoint(max_a = 2, maxtilt = 10, maxTemp = 290, minTemp = 270, minPress
 
 
 if __name__ == "__main__":
-    n = 10
-    data = ""
-    for _ in range(n):
-        text = ""
-        for i in genDataPoint():
-            text += str(i) + ";"
-        data += text[:-1] + "\n"
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', "--count", help="number of tests", default=10)
+    parser.add_argument('-m', '--manual', help="manual test input", default = False)
     
+    args = parser.parse_args()
+    
+    
+    n = int(args.count)
+    if n < 1:
+        raise ValueError('Invalid count value')
+    if not args.manual:
+        
+        data = ""
+        for _ in range(n):
+            text = ""
+            for i in genDataPoint():
+                text += str(i) + ";"
+            data += text[:-1] + "\n"
+    
+    else:
+        data = (args.manual + '\n') * n
+        
     with open(os.getcwd() +"/data/test.data",'w') as f:
         f.write(data[:-1])
     f.close()
+        
