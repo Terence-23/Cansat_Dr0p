@@ -135,7 +135,7 @@ def getData(fPath):
         data = f.readlines()
     wind.debug("Data read:")
     for i, v in enumerate(data):
-        v = [np.float128(float(j)) for j in v[:-2].split(';')]
+        v = [(float(j)) for j in v[:-2].split(';')]
         data[i] = v
         wind.debug(data[i])
 
@@ -183,7 +183,7 @@ def calcWindSpeed():
     wind.info(f"All({id + 1}) threads finished.")
     wind.info(results)
     results.sort()
-    wind.info("Writing results specified to output file")
+    wind.info("Writing results to specified output file")
     for i in results:
         data = ""
         for j in i[1]:
