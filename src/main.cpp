@@ -1,6 +1,6 @@
-// #include "processData.cpp"
-// #include "collectData.cpp"
-// #include "send.cpp"
+#include "processData.h"
+#include "collectData.h"
+#include "communication.h"
 #include <Arduino.h>
 
 void setup()
@@ -8,6 +8,7 @@ void setup()
 
 }
 
-void loop(){
+void loop()
+{
 
 }
