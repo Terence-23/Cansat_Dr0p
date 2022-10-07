@@ -18,7 +18,6 @@ double calc_height()
     return h;
 }
 
-
 // calculate angle for the cansat to rotate
 double calc_rotation(Point p_pos, Point t_pos, double rot)
 {   
@@ -31,6 +30,7 @@ double calc_rotation(Point p_pos, Point t_pos, double rot)
 
     return goal + rot;
 }
+
 // get scalar distance from other point
 double Point::distance_s(Point other)
 {
