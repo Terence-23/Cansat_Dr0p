@@ -1,12 +1,16 @@
 #include "collectData.h"
 
 // BME680
+
+Adafruit_BME680 bme(BME_CS, BME_MOSI, BME_MISO, BME_SCK);
+
+void sensorSetup()
+{
+    BME_setup();
+}
+
 void BME_setup()
 {
-
-    bme = Adafruit_BME680(BME_CS, BME_MOSI, BME_MISO, BME_SCK);
-
-
     if (!bme.begin())
     {
         Serial.println(F("Could not find a valid BME680 sensor, check wiring!"));

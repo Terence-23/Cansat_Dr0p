@@ -1,10 +1,12 @@
-// #include "processData.h"
-// #include "CanComm.cpp"
-// #include "communication.h"
+#include "collectData.h"
+#include "CanComm.h"
 #include <Arduino.h>
 
 void setup()
 {
+    Serial.begin(115200);
+    radioSetup();
+    sensorSetup();
 
 }
 
@@ -12,5 +14,3 @@ void loop()
 {
 
 }
-
-//src/collectData.cpp.o:(.bss.bme+0x0): multiple definition of `bme'; src/CanComm.cpp.o:(.bss.bme+0x0): first defined here

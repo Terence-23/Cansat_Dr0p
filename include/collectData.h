@@ -20,6 +20,8 @@ extern unsigned long endTime;
 
 #define SEALEVELPRESSURE_HPA (1013.25)
 
+void sensorSetup();
+
 void BME_setup();
 
 void BME_read();
