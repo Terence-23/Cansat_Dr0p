@@ -1,4 +1,4 @@
-![Uploading dr0p_for_pomagam (2).png…]()
+![dr0p_for_pomagam (3)](https://user-images.githubusercontent.com/64161240/197849294-7d230bf2-6cb9-47b9-872d-0e271b2a48e1.png)
 
 We are a team of six high-schoolers from Bednarska Szkoła Realna. We take part in international contest – CanSat, organized for over 20 years by ESA (European Space Agency) and CNK (Centrum Nauki Kopernik). The goal of the contest is to build and drop from 2 kilometers a can-sized probe. During and after the landing, the probe must complete two, previously defined, missions staying in touch with the ground station. 
 
