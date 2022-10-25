@@ -130,6 +130,7 @@ GNRMC L76X_Gat_GNRMC()
 		GPS.Time_H = 0;
     GPS.Time_M = 0;
     GPS.Time_S = 0;
+                        // Serial.println("^LAT^");
     DEV_Uart_ReceiveString(buff_t, BUFFSIZE);
     // Uncomment next line to get raw GPS input
     //  Serial.print(buff_t);
@@ -137,7 +138,7 @@ GNRMC L76X_Gat_GNRMC()
     while(add < BUFFSIZE){
         if(buff_t[add] == '$' && buff_t[add+1] == 'G' && (buff_t[add+2] == 'N' || buff_t[add+2] == 'P')\
             && buff_t[add+3] == 'R' && buff_t[add+4] == 'M' && buff_t[add+5] == 'C'){
-            Serial.println("GNRMC");
+            // Serial.println("GNRMC");
             x = 0;
             for(z = 0; x < 12; z++){
                 if(buff_t[add+z]=='\0'){
@@ -183,7 +184,10 @@ GNRMC L76X_Gat_GNRMC()
                             }
                             latitude = (buff_t[add+z+i+1]-'0') + latitude*10;
                         }
+                        // Serial.println(latitude);
                         GPS.Lat = latitude/1000000.0;
+                        // Serial.println(GPS.Lat);
+                        // Serial.println("^LAT^");
                     }else if(x == 4){
                         GPS.Lat_area = buff_t[add+z+1];
                     }
@@ -197,7 +201,11 @@ GNRMC L76X_Gat_GNRMC()
                                 continue;
                             longitude = (buff_t[add+z+i+1]-'0') + longitude*10;
                         }
+                        // Serial.println(longitude);
                         GPS.Lon = longitude/1000000.0;
+
+                        // Serial.println(GPS.Lon);
+                        // Serial.println("^LON^");
                     }else if(x == 6){
                         GPS.Lon_area = buff_t[add+z+1];
                     }

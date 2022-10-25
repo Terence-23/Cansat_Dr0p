@@ -28,6 +28,7 @@ void GPS_setup(){
 
 GNRMC GPS_read(){
     // Serial.print("GPS");
+    // Read GPS data
     return L76X_Gat_GNRMC();
 }
 

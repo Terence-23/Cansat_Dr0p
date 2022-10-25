@@ -1,6 +1,7 @@
 #include "collectData.h"
 #include "CanComm.h"
 #include <Arduino.h>
+#include <stdio.h>
 
 void setup()
 {
@@ -15,6 +16,8 @@ void setup()
 void loop()
 {
     GNRMC GPS1 = GPS_read();
+    // char* text = (char*)malloc(30);
     Serial.print("\nGPS status:"); Serial.println(GPS1.Status);
-    Serial.printf("Lat: %G, Lon: %G\n", GPS1.Lat, GPS1.Lon);
+    // Serial.printf("Lat: %G, Lon: %G\n", GPS1.Lat, GPS1.Lon);
+    Serial.print("Lat: "); Serial.print(GPS1.Lat, 5); Serial.print(" Lon: "); Serial.println(GPS1.Lon, 5);
 }
