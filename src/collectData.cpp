@@ -6,7 +6,29 @@ Adafruit_BME680 bme(BME_CS, BME_MOSI, BME_MISO, BME_SCK);
 
 void sensorSetup()
 {
-    BME_setup();
+    // BME_setup();
+    Serial1.println("GPS");
+    GPS_setup();
+}
+
+void GPS_setup(){
+    Serial.begin(9600);
+    Serial.print("aaa");
+    DEV_Set_Baudrate(115200);
+    L76X_Send_Command(SET_NMEA_OUTPUT);
+    L76X_Send_Command(SET_NMEA_BAUDRATE_9600);
+    DEV_Delay_ms(500);
+
+    // L76X_Send_Command(9600);
+    DEV_Set_Baudrate(9600);
+    DEV_Delay_ms(500);
+    L76X_Send_Command(SET_NMEA_OUTPUT);
+    Serial.println("GPS ready");
+}
+
+GNRMC GPS_read(){
+    // Serial.print("GPS");
+    return L76X_Gat_GNRMC();
 }
 
 void BME_setup()
