@@ -1,11 +1,13 @@
+#ifdef CANSAT
 #include "collectData.h"
 
 // BME680
 
-Adafruit_BME680 bme(BME_CS, BME_MOSI, BME_MISO, BME_SCK);
+Adafruit_BME680 bme(BME_CS/*, BME_MOSI, BME_MISO, BME_SCK*/);
 
 void sensorSetup()
 {
+    // BME_setup() - for use with BME uncomment line below
     // BME_setup();
     Serial1.println("GPS");
     GPS_setup();
@@ -67,3 +69,4 @@ bool BME_is_reading()
     }
     return false;
 }
+#endif

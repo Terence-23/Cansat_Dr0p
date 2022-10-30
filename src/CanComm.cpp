@@ -1,10 +1,23 @@
+#ifdef CANSAT
 #include "CanComm.h"
 
+
+char packetBuf[RH_RF95_MAX_MESSAGE_LEN];
 uint8_t len = sizeof(packetBuf);
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
+String fName = "";
+File myFile;
+
+void commsSetup()
+{
+    radioSetup();
+    sDSetup();
+}
 
 void radioSetup()
 {
+    pinMode(SD_CS, OUTPUT);
+    digitalWrite(SD_CS, 1);
     pinMode(RFM95_RST, OUTPUT);
     digitalWrite(RFM95_RST, HIGH);
 
@@ -50,6 +63,36 @@ void radioSetup()
     rf95.setTxPower(23, false);
 }
 
+void sDSetup()
+{
+    // if(root.isOpen()) root.close();
+    int a = 0;
+    try{
+    SD.end();
+    while(!SD.begin(SD_CS))
+    {
+        Serial.println(F("SD CARD FAILED, OR NOT PRESENT!"));
+        Serial.println(a);
+        ++a;
+        // while (1); // don't do anything more:
+        // delay(1000);
+    }
+    Serial.println("SD ready");
+    }catch (const char *exc){
+        Serial.println(exc);
+    }
+    int i = 0;
+
+    char fTmp[13] = "log";
+    itoa(i, fTmp+3, 10);    
+
+    while (SD.exists(fTmp)){
+        itoa(i, fTmp+3, 10);
+        ++i;    
+    }
+    fName = fTmp;
+}
+
 void preparePacket(float temp, int32_t press, float humidity)
 {
 
@@ -57,7 +100,7 @@ void preparePacket(float temp, int32_t press, float humidity)
     char buf[RH_RF95_MAX_MESSAGE_LEN];
 
     buf[0] = '1';
-    // temp(f), press(i32), humidity(f), GPS_long, GPS_lat;
+    // temp(f), press(i32), humidity(f), GPS_lon, GPS_lat;
 
     // char tempbuf[4] = {(temp & byteMask4), (temp & byteMask3), (temp & byteMask2), (temp & byteMask)};
     char *tempbuf = (char *)(&temp);
@@ -80,6 +123,14 @@ void preparePacket(float temp, int32_t press, float humidity)
     strcpy(packetBuf, buf);
 }
 
+void writeSDPacket()
+{
+
+    myFile = SD.open("arduino.txt", FILE_WRITE);
+    myFile.println(packetBuf);
+    myFile.close();
+}
+
 void sendPacket()
 {
     rf95.send((uint8_t *)packetBuf, 20);
@@ -87,7 +138,7 @@ void sendPacket()
     //   Serial.println("Waiting for packet to complete...");
     delay(10);
     rf95.waitPacketSent();
-    
+
     if (rf95.waitAvailableTimeout(500))
     {
         // Should be a reply message for us now
@@ -97,7 +148,7 @@ void sendPacket()
             Serial.println((char *)recvBuf);
             Serial.print("RSSI: ");
             Serial.println(rf95.lastRssi(), DEC);
-            decode((char*)recvBuf);
+            decode((char *)recvBuf);
         }
         else
         {
@@ -111,7 +162,8 @@ void sendPacket()
 }
 void decode(char *packet)
 {
-    // GPS_long, GPS_lat
+    // GPS_lon, GPS_lat
     GPS_lat = *((double *)&packet[8]);
-    GPS_long = *((double *)&packet[0]);
+    GPS_lon = *((double *)&packet[0]);
 }
+#endif

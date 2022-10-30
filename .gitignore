@@ -7,3 +7,6 @@
 **/out
 **.out
 .pio/build/adafruit_feather_m0
+.pio/build/CANSAT_feather_m0
+.pio/build/GROUND_feather_m0
+.pio/libdeps

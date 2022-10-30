@@ -1,36 +1,88 @@
-#include "Point.h"
-#include <math.h>
+#ifdef GROUND
+#include <station.h>
 
-// FIXME: remove declarations below and get some actual data in place.
-double base_temperature, Lb, preassure, base_preassure, R, g, M;
+char packetBuf[RH_RF95_MAX_MESSAGE_LEN], serialBuf[RH_RF95_MAX_MESSAGE_LEN];
+int packetLen = sizeof(packetBuf), serialLen = sizeof(serialBuf);
+RH_RF95 rf95(RFM95_CS, RFM95_INT);
+double Lon = 0, Lat = 0;
 
-// calculate height of the cansat
-double calc_height()
+
+void radioSetup()
 {
-    // Pb = static pressure (pressure at sea level) [Pa]
-    // Tb = standard temperature (temperature at sea level) [K]
-    // Lb = standard temperature lapse rate [K/m] = -0.0065 [K/m]
-    // h = height about sea level [m]
-    // R = universal gas constant = 8.31432
-    // g0 = gravitational acceleration constant = 9.80665
-    // M = molar mass of Earth’s air = 0.0289644 [kg/mol]
+    pinMode(RFM95_RST, OUTPUT);
+    digitalWrite(RFM95_RST, HIGH);
 
-    // h = (Tb/Lb) * ((P/Pb)^(-R*Lb/g0*M) - 1)
-    double h = (base_temperature / Lb) * (pow(preassure/base_preassure, -R*Lb/g*M) -1);
-    return h;
+    while (!Serial)
+    {
+        delay(1);
+    }
+
+    delay(100);
+
+    Serial.println("Feather LoRa TX Test!");
+
+    // manual reset
+    digitalWrite(RFM95_RST, LOW);
+    delay(10);
+    digitalWrite(RFM95_RST, HIGH);
+    delay(10);
+
+    while (!rf95.init())
+    {
+        Serial.println("LoRa radio init failed");
+        Serial.println("Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
+        while (1)
+            ;
+    }
+    Serial.println("LoRa radio init OK!");
+
+    // Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM
+    if (!rf95.setFrequency(RF95_FREQ))
+    {
+        Serial.println("setFrequency failed");
+        while (1)
+            ;
+    }
+    Serial.print("Set Freq to: ");
+    Serial.println(RF95_FREQ);
+
+    // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
+
+    // The default transmitter power is 13dBm, using PA_BOOST.
+    // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then
+    // you can set transmitter powers from 5 to 23 dBm:
+    rf95.setTxPower(23, false);
 }
 
 
+void preparePacket(){
 
-// calculate angle for the cansat to rotate
-double calc_rotation(Point p_pos, Point t_pos, double rot)
-{   
-    // p_pos = pos of cansat
-    // t_pos = pos of target
-    // rot = cansat rotation
-    double x = t_pos.x - p_pos.x, z = t_pos.z - p_pos.z;
-    double goal = atan2(z, x);
-    // cerr << goal << ' ' << x << ' ' << z;
+    char* Lon_ch = (char*)&Lon;
+    char* Lat_ch = (char*)&Lat;
 
-    return goal + rot;
+    strncpy(packetBuf, Lon_ch, sizeof(Lon));
+    strncpy(packetBuf + sizeof(Lon), Lat_ch, sizeof(Lat));
+
 }
+void sendPacket(){
+
+}
+void recvPacket(){
+
+}
+void decodePacket(){
+
+}
+void prepareSerial(){
+
+}
+void sendSerial(){
+
+}
+void recvSerial(){
+
+}
+void decodeSerial(){
+
+}
+#endif

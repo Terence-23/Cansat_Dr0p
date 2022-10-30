@@ -1,7 +1,8 @@
-mikem/RadioHead@^1.120
-adafruit/Adafruit Unified Sensor@^1.1.6
-adafruit/Adafruit Zero DMA Library@^1.1.0
-adafruit/Adafruit BusIO@^1.13.2
-Wire
+arduino-libraries/SD
 SPI
+Wire
 adafruit/Adafruit BME680 Library@^2.0.2
+mikem/RadioHead@^1.120
+adafruit/Adafruit BusIO@^1.13.2
+adafruit/Adafruit Zero DMA Library@^1.1.0
+adafruit/Adafruit Unified Sensor@^1.1.6
