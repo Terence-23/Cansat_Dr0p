@@ -6,7 +6,6 @@ int packetLen = sizeof(packetBuf), serialLen = sizeof(serialBuf);
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 double Lon = 0, Lat = 0;
 
-
 void radioSetup()
 {
     pinMode(RFM95_RST, OUTPUT);
@@ -51,38 +50,59 @@ void radioSetup()
     // The default transmitter power is 13dBm, using PA_BOOST.
     // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then
     // you can set transmitter powers from 5 to 23 dBm:
-    rf95.setTxPower(23, false);
+    rf95.setTxPower(20, false);
 }
 
+void preparePacket()
+{
 
-void preparePacket(){
-
-    char* Lon_ch = (char*)&Lon;
-    char* Lat_ch = (char*)&Lat;
+    char *Lon_ch = (char *)&Lon;
+    char *Lat_ch = (char *)&Lat;
 
     strncpy(packetBuf, Lon_ch, sizeof(Lon));
     strncpy(packetBuf + sizeof(Lon), Lat_ch, sizeof(Lat));
-
 }
-void sendPacket(){
 
+void sendPacket()
+{
+    preparePacket();
+    uint8_t *data = (uint8_t *)packetBuf;
+    rf95.send(data, sizeof(data));
+    rf95.waitPacketSent();
+    Serial.println("Sent a reply");
 }
-void recvPacket(){
 
+void recvPacket()
+{
+    if (!rf95.available())
+    {
+        return;
+    }
+    if (rf95.recv((uint8_t *)packetBuf, (uint8_t *)&packetLen))
+    {
+        //   RH_RF95::printBuffer("Received: ", packetBuf, packetLen);
+        Serial.print("Got: ");
+        Serial.println((char *)packetBuf);
+        // Serial.print("RSSI: ");
+        // Serial.println(rf95.lastRssi(), DEC);
+
+        // Send a reply
+        sendPacket();
+    }
+    else
+    {
+        Serial.println("Receive failed");
+    }
 }
-void decodePacket(){
 
+void recvSerial()
+{
+    Serial.readBytesUntil('\n', serialBuf, serialLen);
 }
-void prepareSerial(){
 
-}
-void sendSerial(){
-
-}
-void recvSerial(){
-
-}
-void decodeSerial(){
-
+void decodeSerial()
+{
+    Lat = *((double *)serialBuf[0]);
+    Lon = *((double *)serialBuf[sizeof(Lat)]);
 }
 #endif

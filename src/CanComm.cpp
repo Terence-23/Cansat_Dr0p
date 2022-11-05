@@ -1,7 +1,6 @@
 #ifdef CANSAT
 #include "CanComm.h"
 
-
 char packetBuf[RH_RF95_MAX_MESSAGE_LEN];
 uint8_t len = sizeof(packetBuf);
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
@@ -60,35 +59,39 @@ void radioSetup()
     // The default transmitter power is 13dBm, using PA_BOOST.
     // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then
     // you can set transmitter powers from 5 to 23 dBm:
-    rf95.setTxPower(23, false);
+    rf95.setTxPower(20, false);
 }
 
 void sDSetup()
 {
     // if(root.isOpen()) root.close();
     int a = 0;
-    try{
-    SD.end();
-    while(!SD.begin(SD_CS))
+    try
     {
-        Serial.println(F("SD CARD FAILED, OR NOT PRESENT!"));
-        Serial.println(a);
-        ++a;
-        // while (1); // don't do anything more:
-        // delay(1000);
+        SD.end();
+        while (!SD.begin(SD_CS))
+        {
+            Serial.println(F("SD CARD FAILED, OR NOT PRESENT!"));
+            Serial.println(a);
+            ++a;
+            // while (1); // don't do anything more:
+            // delay(1000);
+        }
+        Serial.println("SD ready");
     }
-    Serial.println("SD ready");
-    }catch (const char *exc){
+    catch (const char *exc)
+    {
         Serial.println(exc);
     }
     int i = 0;
 
     char fTmp[13] = "log";
-    itoa(i, fTmp+3, 10);    
+    itoa(i, fTmp + 3, 10);
 
-    while (SD.exists(fTmp)){
-        itoa(i, fTmp+3, 10);
-        ++i;    
+    while (SD.exists(fTmp))
+    {
+        itoa(i, fTmp + 3, 10);
+        ++i;
     }
     fName = fTmp;
 }
@@ -102,7 +105,7 @@ void preparePacket(float temp, int32_t press, float humidity)
     buf[0] = '1';
     // temp(f), press(i32), humidity(f), GPS_lon, GPS_lat;
 
-    // char tempbuf[4] = {(temp & byteMask4), (temp & byteMask3), (temp & byteMask2), (temp & byteMask)};
+    // char tempbuf[4]
     char *tempbuf = (char *)(&temp);
     char *pressbuf = (char *)(&press);
     char *humiditybuf = (char *)(&humidity);

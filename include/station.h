@@ -15,12 +15,13 @@ extern char serialBuf[RH_RF95_MAX_MESSAGE_LEN];
 extern int serialLen;
 
 extern double Lon, Lat;
+extern double dLon, dLat, dTemp, dHum;
+extern uint32_t dPress;
 
 void radioSetup();
 void preparePacket();
 void sendPacket();
 void recvPacket();
-void decodePacket();
 void prepareSerial();
 void sendSerial();
 void recvSerial();

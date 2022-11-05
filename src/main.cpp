@@ -1,10 +1,6 @@
 #include <Arduino.h>
 
 
-// #define CANSAT
-#define GROUND
-// #define CLEAR
-
 #ifdef CANSAT
 #include "collectData.h"
 #include "CanComm.h"
@@ -68,4 +64,13 @@ void loop()
         delay(1000000);
     }
 
+#endif
+#ifdef TEST
+    void setup(){
+        Serial.begin(115200);
+        Serial.println("TEST");
+    }
+    void loop(){
+        Serial.println("0, 1, 2, 3, 4, 5, 6, 7, 8, 9\n");
+    }
 #endif
