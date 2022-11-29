@@ -20,10 +20,10 @@ class config(object):
         GPIO.output(ser.STANDBY, GPIO.HIGH)
         
     def Uart_SendByte(ser, value): 
-        ser.serial.write(value) 
+        ser.serial.write(bytearray(value, 'ascii')) 
         
     def Uart_SendString(ser, value): 
-        ser.serial.write(value)
+        ser.serial.write(bytearray(value, 'ascii'))
   
 
     def Uart_ReceiveByte(ser): 

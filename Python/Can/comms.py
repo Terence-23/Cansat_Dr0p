@@ -14,17 +14,21 @@ class Packet:
     def decode(packet:str):
         data = packet.split(sep=Packet.sep)
         for i in data:
-            match i[0]:
-                # expected GPS lat
-                case 'a':
+            # expected GPS lat
+            if i[0] == 'a':
+
                     pass
-                # expected GPS lon
-                case 'o':
+            # expected GPS lon
+            elif i[0] == 'o':
                     pass
-                case 'h':
-                    Radio.send_packet("h")
-                case _:
-                    SD_o.write(f"Unknown packet ID: {i[0]}")
+            # confirm recieving
+            elif i[0] =='h':
+                Radio.send_packet("c")
+            # ignore c
+            elif i[0] == 'c':
+                pass
+            else:
+                SD_o.write(f"Unknown packet ID: {i[0]}")
         
                     
 class SD:
@@ -48,7 +52,7 @@ class Radio:
     
     @staticmethod
     def recv_packet() ->str:
-        packet:str
+        packet:str = ''
 
         return packet
 

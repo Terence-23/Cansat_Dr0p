@@ -1,5 +1,5 @@
 import RPi.GPIO as GPIO
-import config
+import lib.L76x.config as config
 import math
 import time
 
@@ -86,7 +86,7 @@ class L76X(object):
         for i in range(2, len(data)):
             Check = Check ^ ord(data[i]) 
         data = data + Temp[16]
-        data = data + Temp[(Check/16)]
+        data = data + Temp[(Check//16)]
         data = data + Temp[(Check%16)]
         self.config.Uart_SendString(data)
         self.config.Uart_SendByte('\r')
@@ -94,15 +94,14 @@ class L76X(object):
         print (data)
         
     def L76X_Gat_GNRMC(self):
-        data = self.config.Uart_ReceiveString(BUFFSIZE)
+        data = self.config.Uart_ReceiveString(BUFFSIZE).decode()
         print (data)
         print ('\n')
         add=0
         self.Status = 0
         for i in range(0, BUFFSIZE-71):
-            if(ord(data[add]) == 36 and ord(data[add+1]) == 71 and (ord(data[add+2]) == 78 \
-            or ord(data[add+2]) == 80) and ord(data[add+3]) == 82 and ord(data[add+4]) == 77\
-            and ord(data[add+5]) == 67):
+            # $GNRMC
+            if(data[add:add+6] == "$GNRMC"):
                     x = 0
                     z = 0
                     while(x < 12):
