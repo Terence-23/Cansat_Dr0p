@@ -26,6 +26,10 @@ class BME:
         return sensor.pressure
 
 class L76X:
+    
+    refresh_delay=1000
+    l_rf_time = 0
+    
     def __init__(self):
         # try:
         x=L76X.L76X()
@@ -38,9 +42,22 @@ class L76X:
         x.L76X_Send_Command(x.SET_NMEA_OUTPUT)
         x.L76X_Exit_BackupMode()
         self.gps = x
-
+        
+    def refresh():
+        x.L76X_Gat_GNRMC()
+        l_rf_time= time.time()*1000;
+    
     def getLat(self):
+        if l_rf_time + refresh_delay <= time.time() * 1000 self.refresh()
+        
         return self.gps.Lat
+    
+    def hasFix():
+        if l_rf_time + refresh_delay <= time.time() * 1000 self.refresh()
+        return gps.Status == 1
+    
     def getLon(self):
+        if l_rf_time + refresh_delay <= time.time() * 1000 self.refresh()
+        
         return self.gps.Lon
 
