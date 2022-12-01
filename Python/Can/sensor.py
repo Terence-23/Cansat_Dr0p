@@ -12,13 +12,23 @@ import digitalio
 import adafruit_bme680
 
 SD_o:comms.SD
-
+PRESSUREHPA = 1013
 
 class BME:
     sensor:adafruit_bme680.Adafruit_BME680
     def __init__(self, cs = digitalio.DigitalInOut(board.D22), spi = board.SPI()) -> None:
         self.sensor = adafruit_bme680.Adafruit_BME680_SPI(spi, cs)
+        self.sensor.sea_level_pressure = PRESSUREHPA
     
+    def setSeaLevelPressure(self, pressure):
+        self.sensor.sea_level_pressure = pressure
+
+    def getSeaLevelPressure(self):
+        return self.sensor.sea_level_pressure
+
+    def getAltitude(self):
+        return self.sensor.altitude
+
     def getTemp(self):
         return self.sensor.temperature
     
