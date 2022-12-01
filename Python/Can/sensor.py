@@ -1,9 +1,7 @@
 # file for sensor communication
 
-
-# bme
-# import adafruit_bme680
-
+import adafruit_lsm303_accel
+import adafruit_lis2mdl
 import time
 from lib.L76x import L76X
 # import math
@@ -29,6 +27,16 @@ class BME:
 
     def getPress(self):
         return self.sensor.pressure
+
+class LSM303:
+    def __init__(self, i2c=board.I2C()) ->None:
+        self.accel = adafruit_lsm303_accel.LSM303_Accel(i2c)
+        self.mag = adafruit_lis2mdl.LIS2MDL(i2c)
+    def getAcceleration(self):
+        return self.accel.acceleration
+
+    def getMagnetic(self):
+        return self.mag.magnetic
 
 class L76x:
     

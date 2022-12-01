@@ -4,16 +4,12 @@ import time
 
 def main():
     comms.SD_o = comms.SD('log.out')
-    comms.Packet.decode("w11;a10;o11;p;h")
+    lsm = sensor.LSM303()
 
-    sensor.SD_o = comms.SD_o
-
-    gps = sensor.L76x()
     while 1:
-        gps.refresh()
-        print(f"Has Fix: {gps.hasFix()}")
-        print(f"Lat: {gps.getLat()} Lon: {gps.getLon()}")
-        time.sleep(0.99)
+        time.sleep(1)
+        print(f"Acceleration(m/s^2) {lsm.getAcceleration()}\n Magnetic(uTeslas){lsm.getMagnetic()}")
+
 
 if __name__ =="__main__":
     main()
