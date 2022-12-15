@@ -64,20 +64,25 @@ class SD:
             # write the packet with a timestamp
             f.write(f"{time.ctime()} :: {packet}\n")
     
+CS = digitalio.DigitalInOut(board.D22)
+RESET = digitalio.DigitalInOut(board.D27)
+FREQ = 433.0
+PWR = 20
 
 class Radio:
-    
-    @staticmethod
-    def send_packet(packet:str):
-        # placeholder
-        print(packet)
-        pass
-    
-    @staticmethod
-    def recv_packet() ->str:
-        packet:str = ''
+    def __init__(self, cs, rst, power, freq, spi=busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)):
+        self.cs = cs
+        self.rst = rst
+        self.power = power
+        self.freq = freq
 
-        return packet
+        self.rfm9x = adafruit_rfm9x.RFM9x(spi, cs, rst, freq)
+        self.rfm9x.tx_power = power
+    def send(self, msg:str):
+        self.rfm9x.send(bytes(msg, "ascii"))
+    def recv(self, delay = 0.5):
+        return self.rfm9x.receive(delay)
+    
 
 
 SD_o:SD
