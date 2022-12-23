@@ -1,4 +1,4 @@
-import comms
+import Can.comms as comms
 
 import board
 from time import ctime
