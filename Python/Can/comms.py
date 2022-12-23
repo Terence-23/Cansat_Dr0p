@@ -30,6 +30,7 @@ class Packet:
             return
         packet_string = str(bytestream).strip()
         packet_parts = packet_string.split(";")[1:-1]
+        print(packet_parts)
 
 
 		# assigning values from packet
