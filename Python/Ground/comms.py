@@ -18,9 +18,9 @@ class Packet:
         
     def encode(self):
         # Encode the packet into a string
-        packet_string = str(self.timestamp) + "," + str(self.temperature) + "," + str(self.pressure) + ","
-        packet_string += str(self.humidity) + "," + str(self.gps_position) + "," + str(self.acceleration) + ","
-        packet_string += str(self.magnetometer_reading) + ',' + str(self.altitude)
+        packet_string = str(self.timestamp) + ";" + str(self.temperature) + ";" + str(self.pressure) + ";"
+        packet_string += str(self.humidity) + ";" + str(self.gps_position) + ";" + str(self.acceleration) + ";"
+        packet_string += str(self.magnetometer_reading) + ';' + str(self.altitude)
         return packet_string
     
     def decode(self, bytestream):
@@ -29,7 +29,7 @@ class Packet:
             SD_o.write("No data to decode")
             return
         packet_string = str(bytestream).strip()
-        packet_parts = packet_string.split(",")
+        packet_parts = packet_string.split(";")
 
 		# assigning values from packet
         if packet_parts[0] != '':
