@@ -1,35 +1,40 @@
 #!/bin/python3
 import comms, sensor
 import time
+import board, digitalio
 
-def nav():
-    pass
+def nav(packet: comms.Packet):
+    # placeholder
+    print(packet)
+
 
 def init():
-    global lsm, bme, gps 
+    global lsm, bme, gps, radio
     lsm = sensor.LSM303()
-
-    bme = sensor.BME()
+    bme = sensor.BME(i2c=board.I2C())
     comms.SD_o = comms.SD('log.out')
+    sensor.SD_o = comms.SD_o
     gps = sensor.L76x()
+    radio = comms.Radio(comms.CS, comms.RESET, comms.PWR, comms.FREQ)
 
 def update():
     gps.refresh()
-    packet = comms.Packet.encode(bme, gps, lsm)
-    comms.Radio.send_packet(packet)
+    Packet = comms.Packet(time.ctime(), temperature=bme.getTemp(), pressure=bme.getPress(), humidity=bme.getHum(), gps_position=(gps.getLat(), gps.getLon()),\
+         acceleration= lsm.getAcceleration(), magnetometer_reading= lsm.getMagnetic(), altitude=bme.getAltitude())
+
+    packet = Packet.encode()
+    radio.send(packet)
     comms.SD_o.write(packet)
-    _in = comms.Radio.recv_packet()
-    comms.Packet.decode(_in)
-    nav()
+    _in = radio.recv()
+    comms.SD_o.write(_in)
+    Packet.decode(_in)
+    nav(Packet)
 
 def main():
     init()
     while 1:
         update()
 
-    while 1:
-        time.sleep(1)
-        print(f"Acceleration(m/s^2) {lsm.getAcceleration()}\n Magnetic(uTeslas){lsm.getMagnetic()}")
 
 
 if __name__ =="__main__":

@@ -11,13 +11,17 @@ import board
 import digitalio
 import adafruit_bme680
 
-SD_o:comms.SD
+SD_o: comms.SD
 PRESSUREHPA = 1013
 
 class BME:
     sensor:adafruit_bme680.Adafruit_BME680
-    def __init__(self, cs = digitalio.DigitalInOut(board.D22), spi = board.SPI()) -> None:
-        self.sensor = adafruit_bme680.Adafruit_BME680_SPI(spi, cs)
+    def __init__(self, cs = digitalio.DigitalInOut(board.D22), spi = board.SPI(), i2c = None) -> None:
+        if i2c != None:
+            self.sensor = adafruit_bme680.Adafruit_BME680_I2C(i2c)
+        else:
+            self.sensor = adafruit_bme680.Adafruit_BME680_SPI(spi, cs)
+
         self.sensor.sea_level_pressure = PRESSUREHPA
     
     def setSeaLevelPressure(self, pressure):

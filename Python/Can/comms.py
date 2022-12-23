@@ -1,58 +1,58 @@
 # file for data handling
+from ast import literal_eval as l_eval
 
 import time
+import digitalio, board
+import busio, adafruit_rfm9x
 
 class Packet:
-    @staticmethod
-    def now():
-        return time.ctime(time.time())
-    sep = ';'
-    @staticmethod
-    def encode(bme, gps, acc):
-        gps.refresh()
-        packet = f't{Packet.now()}{Packet.sep}a{gps.getLat()}{Packet.sep}o{gps.getLon()}{Packet.sep}g{acc.getAcceleration()}{Packet.sep}m{acc.getMagnetic}{Packet.sep}T{bme.getTemp()}{Packet.sep}H{bme.getHum()}{Packet.sep}P{bme.getPress()}'
-        return packet
-    @staticmethod
-    def decode(packet:str):
-        data = packet.split(sep=Packet.sep)
-        for i in data:
-            # expected GPS lat
-            if i[0] == 'a':
-
-                pass
-            # expected GPS lon
-            elif i[0] == 'o':
-                pass
-            # confirm recieving
-            elif i[0] =='h':
-                Radio.send_packet("c")
-            # ignore c
-            elif i[0] == 'c':
-                pass
-            elif i[0] == 't':
-                # timestamp
-                pass
-            elif i[0] == 'g':
-                # acceleration
-                # (x, y, z)
-                pass
-            elif i[0] == 'm':
-                # Magnetic
-                # (x, y, z)
-                pass
-            elif i[0] == 'T':
-                # temp
-                pass
-            elif i[0] == 'H':
-                # humidity
-                pass
-            elif i[0] == 'P':
-                # pressure
-                pass
-
-            else:
-                SD_o.write(f"Unknown packet ID: {i[0]}")
+    def __init__(self, timestamp, temperature, pressure, humidity, gps_position, acceleration, magnetometer_reading, altitude):
+        self.timestamp = timestamp
+        self.temperature = temperature
+        self.pressure = pressure
+        self.humidity = humidity
+        self.gps_position = gps_position
+        self.acceleration = acceleration
+        self.magnetometer_reading = magnetometer_reading
+        self.altitude = altitude
         
+    def encode(self):
+        # Encode the packet into a string
+        packet_string = str(self.timestamp) + "," + str(self.temperature) + "," + str(self.pressure) + ","
+        packet_string += str(self.humidity) + "," + str(self.gps_position) + "," + str(self.acceleration) + ","
+        packet_string += str(self.magnetometer_reading) + ',' + str(self.altitude)
+        return packet_string
+    
+    def decode(self, bytestream):
+        # Decode the bytestream and update the packet's attributes
+        if bytestream == None:
+            SD_o.write("No data to decode")
+            return
+        packet_string = str(bytestream).strip()
+        packet_parts = packet_string.split(",")
+
+		# assigning values from packet
+        if packet_parts[0] != '':
+            self.timestamp = packet_parts[0]
+        if packet_parts[1] != '':
+            self.temperature = float(packet_parts[1])
+        if packet_parts[2] != '':
+            self.pressure = float(packet_parts[2])
+        if packet_parts[3] != '':
+            self.humidity = float(packet_parts[3])
+        if packet_parts[4] != '':
+            self.gps_position = l_eval(packet_parts[4])
+        if packet_parts[5] != '':
+            self.acceleration = l_eval(packet_parts[5])
+        if packet_parts[6] != '':
+            self.magnetometer_reading = l_eval(packet_parts[6])
+        if packet_parts[7] != '':
+            self.altitude = float(packet_parts[7])
+
+    def __str__(self) -> str:
+        return f"Packet({self.timestamp},{self.temperature},{self.pressure},{self.humidity},\
+            {self.gps_position},{self.acceleration},{self.magnetometer_reading},{self.altitude})"
+
                     
 class SD:
     # get path to log file
@@ -80,8 +80,8 @@ class Radio:
         self.rfm9x.tx_power = power
     def send(self, msg:str):
         self.rfm9x.send(bytes(msg, "ascii"))
-    def recv(self, delay = 0.5):
-        return self.rfm9x.receive(delay)
+    def recv(self, timeout = 0.5):
+        return self.rfm9x.receive(timeout=timeout)
     
 
 
