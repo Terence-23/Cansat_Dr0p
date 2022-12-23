@@ -1,6 +1,8 @@
+
+import sys
+sys.path.insert(0, '..')
 import Can.comms as comms
 
-import board
 from time import ctime
 
 def main():
