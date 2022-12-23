@@ -79,7 +79,7 @@ class Radio:
         self.rfm9x = adafruit_rfm9x.RFM9x(spi, cs, rst, freq)
         self.rfm9x.tx_power = power
     def send(self, msg:str):
-        self.rfm9x.send(bytes(msg, "ascii"))
+        self.rfm9x.send(bytes(str(msg), "ascii"))
     def recv(self, timeout = 0.5):
         return self.rfm9x.receive(timeout=timeout)
     

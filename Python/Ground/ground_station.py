@@ -12,7 +12,7 @@ def main():
         comms.SD_o.write(packet)
         packet = comms.Packet(timestamp=ctime(), gps_position=(0, 0))
         comms.SD_o.write(f"OUT: {packet}")
-        radio.send(packet)
+        radio.send(str(packet))
 
 
 
