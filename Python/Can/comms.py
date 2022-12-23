@@ -6,7 +6,7 @@ import digitalio, board
 import busio, adafruit_rfm9x
 
 class Packet:
-    def __init__(self, timestamp, temperature, pressure, humidity, gps_position, acceleration, magnetometer_reading, altitude):
+    def __init__(self, timestamp='', temperature='', pressure='', humidity='', gps_position='', acceleration='', magnetometer_reading='', altitude=''):
         self.timestamp = timestamp
         self.temperature = temperature
         self.pressure = pressure
