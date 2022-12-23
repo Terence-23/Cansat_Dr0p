@@ -32,21 +32,21 @@ class Packet:
         packet_parts = packet_string.split(";")
 
 		# assigning values from packet
-        if packet_parts[0] != '':
-            self.timestamp = packet_parts[0]
         if packet_parts[1] != '':
-            self.temperature = float(packet_parts[1])
+            self.timestamp = packet_parts[0]
         if packet_parts[2] != '':
-            self.pressure = float(packet_parts[2])
+            self.temperature = float(packet_parts[1])
         if packet_parts[3] != '':
-            self.humidity = float(packet_parts[3])
+            self.pressure = float(packet_parts[2])
         if packet_parts[4] != '':
-            self.gps_position = l_eval(packet_parts[4])
+            self.humidity = float(packet_parts[3])
         if packet_parts[5] != '':
-            self.acceleration = l_eval(packet_parts[5])
+            self.gps_position = l_eval(packet_parts[4])
         if packet_parts[6] != '':
-            self.magnetometer_reading = l_eval(packet_parts[6])
+            self.acceleration = l_eval(packet_parts[5])
         if packet_parts[7] != '':
+            self.magnetometer_reading = l_eval(packet_parts[6])
+        if packet_parts[8] != '':
             self.altitude = float(packet_parts[7])
 
     def __str__(self) -> str:
