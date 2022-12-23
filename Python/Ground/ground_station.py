@@ -8,11 +8,12 @@ def main():
     comms.SD_o = comms.SD('log.txt')
 
     while 1:
-        packet = comms.Packet(radio.recv())
+        packet = comms.Packet()
+        packet.decode(radio.recv())
         comms.SD_o.write(packet)
         packet = comms.Packet(timestamp=ctime(), gps_position=(0, 0))
         comms.SD_o.write(f"OUT: {packet}")
-        radio.send(str(packet))
+        radio.send(packet.encode())
 
 
 
