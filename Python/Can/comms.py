@@ -29,24 +29,25 @@ class Packet:
             SD_o.write("No data to decode")
             return
         packet_string = str(bytestream).strip()
-        packet_parts = packet_string.split(";")
+        packet_parts = packet_string.split(";")[1:-1]
+
 
 		# assigning values from packet
-        if packet_parts[1] != '':
+        if packet_parts[0] != '':
             self.timestamp = packet_parts[0]
-        if packet_parts[2] != '':
+        if packet_parts[1] != '':
             self.temperature = float(packet_parts[1])
-        if packet_parts[3] != '':
+        if packet_parts[2] != '':
             self.pressure = float(packet_parts[2])
-        if packet_parts[4] != '':
+        if packet_parts[3] != '':
             self.humidity = float(packet_parts[3])
-        if packet_parts[5] != '':
+        if packet_parts[4] != '':
             self.gps_position = l_eval(packet_parts[4])
-        if packet_parts[6] != '':
+        if packet_parts[5] != '':
             self.acceleration = l_eval(packet_parts[5])
-        if packet_parts[7] != '':
+        if packet_parts[6] != '':
             self.magnetometer_reading = l_eval(packet_parts[6])
-        if packet_parts[8] != '':
+        if packet_parts[7] != '':
             self.altitude = float(packet_parts[7])
 
     def __str__(self) -> str:
