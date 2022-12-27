@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.40.0 -->
+<!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkListStore" id="liststore1">
@@ -24,10 +24,11 @@
   </object>
   <object class="GtkWindow" id="window1">
     <property name="can-focus">False</property>
+    <property name="title"> Ground station</property>
     <property name="default-width">600</property>
     <property name="default-height">400</property>
     <child>
-      <object class="GtkBox">
+      <object class="GtkBox" id="mainBox">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <child>
@@ -170,6 +171,30 @@
               </packing>
             </child>
             <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="label" translatable="yes">Ground level pressure:</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="pressure_in">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="placeholder-text" translatable="yes">pressure in hPa</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">4</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkButton" id="send_button">
                 <property name="label">Send Data</property>
                 <property name="use-action-appearance">False</property>
@@ -181,7 +206,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">2</property>
+                <property name="position">5</property>
               </packing>
             </child>
           </object>

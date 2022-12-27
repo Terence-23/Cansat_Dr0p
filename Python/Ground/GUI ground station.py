@@ -2,23 +2,28 @@ import sys
 sys.path.append('..')
 
 import gi
+import time
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, GObject, GLib
+import threading, traceback
+from ast import literal_eval as l_eval
+
+SD_o = sys.stderr
 
 class Radio:
     
-    def __init__():
+    def __init__(self):
         pass
     
     def recv(self):
-        pass
+        time.sleep(0.5)
 
-    def send(self ):
+    def send(self, packet):
         pass
 
 
 class Packet:
-    def __init__(self, timestamp='', temperature='', pressure='', humidity='', gps_position='', acceleration='', magnetometer_reading='', altitude=''):
+    def __init__(self, timestamp=None, temperature=None, pressure=None, humidity=None, gps_position=None, acceleration=None, magnetometer_reading=None, altitude=None):
         self.timestamp = timestamp
         self.temperature = temperature
         self.pressure = pressure
@@ -67,21 +72,18 @@ class Packet:
         return f"Packet({self.timestamp},{self.temperature},{self.pressure},{self.humidity},\
             {self.gps_position},{self.acceleration},{self.magnetometer_reading},{self.altitude})"
 
-    
-import gi
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
-
-class RadioAppWindow(Gtk.Window):
+class RadioAppWindow:
 
     radio = Radio()
 
     def __init__(self):
-        Gtk.Window.__init__(self, title="Radio App")
+        #Gtk.Window.__init__(self, title="Radio App")
 
         builder = Gtk.Builder()
-        builder.add_from_file("radio_app.glade")
+        builder.add_from_file("GUI_ground_station.glade")
         self.window = builder.get_object("window1")
+        
+        self.window.show()
         self.scrolled_window = builder.get_object("scrolledwindow1")
         self.treeview = builder.get_object("treeview1")
         self.send_button = builder.get_object("send_button")
@@ -94,15 +96,21 @@ class RadioAppWindow(Gtk.Window):
             column = Gtk.TreeViewColumn(column_title, renderer, text=i)
             self.treeview.append_column(column)
 
-        self.add(self.window)
+        self.GPSPos_in = builder.get_object('GPSPos_in')
+        self.pressure_in = builder.get_object('pressure_in')
+        #self.add(self.window)
         self.listener_thread = threading.Thread(target=self.listen_for_radio)
         self.listener_thread.start()
         self.send_button.connect("clicked", self.send_GPS_Pos)
+        self.GPSPos_in.connect('activate', self.send_GPS_Pos)
+        self.pressure_in.connect('activate', self.send_GPS_Pos)
+        
 
 
     def listen_for_radio(self):
         while True:
-            self.radio.recv()
+            packet = Packet(timestamp=time.ctime(), temperature=None)
+            packet.decode(self.radio.recv())
             def update():
                 # Update the liststore with the data from the packet
                 self.liststore.append([packet.timestamp, str(packet.temperature), str(packet.pressure), str(packet.humidity), str(packet.gps_position), str(packet.acceleration), str(packet.magnetometer_reading), str(packet.altitude)])
@@ -112,28 +120,39 @@ class RadioAppWindow(Gtk.Window):
                     self.liststore.remove(self.liststore[0].iter)
 
             # Schedule the update function to be called in the main GTK thread
-            GObject.idle_add(update)
+            GLib.idle_add(update)
 
 
     def send_GPS_Pos(self, widget):
         # Get the text from the text input widget
         gps_pos_text = self.GPSPos_in.get_text()
+        pressure_text = self.pressure_in.get_text()
 
         # Try to parse the text as a tuple of two floats
         try:
             gps_pos = tuple(float(x) for x in gps_pos_text.split(','))
         except ValueError:
             # If the text could not be parsed as a tuple of floats, show an error message and return
-            self.error_dialog.show()
-            return
+            SD_o.write(traceback.format_exc())
+            gps_pos = None
+        
+        try: 
+            press = float(pressure_text)
+        except ValueError:
+            SD_o.write(traceback.format_exc())
+            press = None
 
         # Create a new Packet object with the parsed GPS position
-        packet = Packet(gps_position=gps_pos)
+        packet = Packet(timestamp=time.ctime(),pressure=press, gps_position=gps_pos)
 
         # Send the encoded packet over the radio
         self.radio.send(packet.encode())
+        print('sent')
    
 
-win = RadioAppWindow()
+
+app = RadioAppWindow()
+win = app.window
 win.connect("destroy", Gtk.main_quit)
 win.show_all()
+Gtk.main()
