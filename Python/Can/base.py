@@ -13,26 +13,29 @@ def init():
     sensor.SD_o = comms.SD_o
     # gps = sensor.L76x()
     radio = comms.Radio(comms.CS, comms.RESET, comms.PWR, comms.FREQ)
-    time.sleep(15)
+    # time.sleep(15)
     # pitch, roll = calculate_angles(*lsm.getAcceleration())
-    time.sleep(4)
+    # time.sleep(4)
     # lsm.mag = calibrate(lsm.mag)
     # servo = Servo()
 
 
 def update():
-    # gps.refresh()
-    Packet = comms.Packet(time.ctime(), temperature=bme.getTemp(), pressure=bme.getPress(), humidity=bme.getHum(), gps_position=None,\
-         acceleration= None, magnetometer_reading= None, altitude=bme.getAltitude())
+    with open("/home/pi/Cansat/Python/batteryTest.log") as f:
+        f.write('update\n')
+        # gps.refresh()
+        Packet = comms.Packet(time.ctime(), temperature=bme.getTemp(), pressure=bme.getPress(), humidity=bme.getHum(), gps_position=None,\
+             acceleration= None, magnetometer_reading= None, altitude=bme.getAltitude())
 
-    packet = Packet.encode()
-    radio.send(packet)
-    comms.SD_o.write(packet)
-    _in = radio.recv()
-    comms.SD_o.write(_in)
-    packet = comms.Packet()
-    packet.decode(_in)
-    bme.setSeaLevelPressure(packet.pressure if packet.pressure != '' else bme.getSeaLevelPressure())
+        packet = Packet.encode()
+        radio.send(packet)
+        comms.SD_o.write(packet)
+        _in = radio.recv()
+        comms.SD_o.write(_in)
+        packet = comms.Packet()
+        packet.decode(_in)
+        bme.setSeaLevelPressure(packet.pressure if packet.pressure != '' else bme.getSeaLevelPressure())
+        f.write('updateEnd \n')
     # desiredPos = packet.gps_position if packet.gps_position != '' else desiredPos
     # nav(Packet)
 
