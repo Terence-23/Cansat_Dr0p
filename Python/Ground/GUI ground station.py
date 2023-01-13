@@ -111,6 +111,7 @@ class RadioAppWindow:
         while True:
             packet = Packet(timestamp=time.ctime(), temperature=None)
             packet.decode(self.radio.recv())
+            SD_o.write(str(packet))
             def update():
                 # Update the liststore with the data from the packet
                 self.liststore.append([packet.timestamp, str(packet.temperature), str(packet.pressure), str(packet.humidity), str(packet.gps_position), str(packet.acceleration), str(packet.magnetometer_reading), str(packet.altitude)])

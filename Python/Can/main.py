@@ -3,9 +3,26 @@ import comms, sensor
 import time
 import board, digitalio
 import threading
+import pwmio
 
+import adafruit_motor
+
+
+class Servo:
+    left = 100
+    neutral = 45
+    right = 0
+
+    def __init__(self, pwm = pwmio.PWMOut(board.D23, frequency=50)) -> None:
+        self.s = adafruit_motor.servo.Servo(pwm, min_pulse=750, max_pulse=2250)
+
+    def rotate(self, angle:int):
+        self.s.angle = angle
 
 import math
+
+servo:Servo
+
 
 def rotate_vector(pitch, roll, vector):
     pitch = math.radians(pitch)
@@ -27,7 +44,7 @@ def calculate_angles(acceleration_x, acceleration_y, acceleration_z):
     return (pitch_degrees, roll_degrees)
 
 
-def calibrate(magnetometer:adafruit_lis2mdl.LIS2MDL):
+def calibrate(magnetometer:sensor.adafruit_lis2mdl.LIS2MDL):
     start_time = time.monotonic()
     hardiron_calibration = [[1000, -1000], [1000, -1000], [1000, -1000]]
 
@@ -127,7 +144,7 @@ def nav(packet: comms.Packet):
         # go Left
         def repeat_function():
             #replace function with function to rotate servo by 45 degrees
-            function()
+            servo.rotate(servo.left)
             start = time.time()
             des_rotation = get_rotation((gps.getLat(), gps.getLon()), desiredPos)
             while compass_reading(*rotate_vector(pitch, roll, lsm.getMagnetic())) < \
@@ -135,7 +152,7 @@ def nav(packet: comms.Packet):
                 pass
                 # Add a delay if necessary
                 time.sleep(0.020)
-            function()
+            servo.rotate(servo.neutral)
         
     elif rotation_to_do > e:
         # go Right
@@ -176,6 +193,7 @@ def init():
     pitch, roll = calculate_angles(*lsm.getAcceleration())
     time.sleep(4)
     lsm.mag = calibrate(lsm.mag)
+    servo = Servo()
 
 
 def update():
