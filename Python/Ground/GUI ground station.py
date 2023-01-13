@@ -1,6 +1,9 @@
+#!/bin/python3
+
 import sys
 sys.path.append('..')
 
+from  Can.comms import Radio
 import gi
 import time
 gi.require_version('Gtk', '3.0')
@@ -8,18 +11,18 @@ from gi.repository import Gtk, GObject, GLib
 import threading, traceback
 from ast import literal_eval as l_eval
 
-SD_o = sys.stderr
+SD_o = sys.stdout
 
-class Radio:
+#class Radio:
     
-    def __init__(self):
-        pass
+ #   def __init__(self):
+  #      pass
     
-    def recv(self):
-        time.sleep(0.5)
+   # def recv(self):
+    #    time.sleep(0.5)
 
-    def send(self, packet):
-        pass
+    #def send(self, packet):
+     #   pass
 
 
 class Packet:
@@ -43,7 +46,7 @@ class Packet:
     def decode(self, bytestream):
         # Decode the bytestream and update the packet's attributes
         if bytestream == None:
-            SD_o.write("No data to decode")
+            SD_o.write("No data to decode\n")
             return
         packet_string = str(bytestream).strip()
         packet_parts = packet_string.split(";")[1:-1]
@@ -111,7 +114,7 @@ class RadioAppWindow:
         while True:
             packet = Packet(timestamp=time.ctime(), temperature=None)
             packet.decode(self.radio.recv())
-            SD_o.write(str(packet))
+            SD_o.write(str(packet) + '\n')
             def update():
                 # Update the liststore with the data from the packet
                 self.liststore.append([packet.timestamp, str(packet.temperature), str(packet.pressure), str(packet.humidity), str(packet.gps_position), str(packet.acceleration), str(packet.magnetometer_reading), str(packet.altitude)])
@@ -157,3 +160,4 @@ win = app.window
 win.connect("destroy", Gtk.main_quit)
 win.show_all()
 Gtk.main()
+

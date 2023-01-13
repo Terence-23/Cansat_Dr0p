@@ -72,7 +72,7 @@ FREQ = 433.0
 PWR = 20
 
 class Radio:
-    def __init__(self, cs, rst, power, freq, spi=busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)):
+    def __init__(self, cs=CS, rst=RESET, power=PWR, freq=FREQ, spi=busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)):
         self.cs = cs
         self.rst = rst
         self.power = power

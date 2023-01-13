@@ -21,7 +21,7 @@ def init():
 
 
 def update():
-    with open("/home/pi/Cansat/Python/batteryTest.log") as f:
+    with open("/home/pi/Cansat/Python/batteryTest.log", 'a') as f:
         f.write('update\n')
         # gps.refresh()
         Packet = comms.Packet(time.ctime(), temperature=bme.getTemp(), pressure=bme.getPress(), humidity=bme.getHum(), gps_position=None,\
