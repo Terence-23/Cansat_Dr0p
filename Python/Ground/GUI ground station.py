@@ -1,9 +1,12 @@
 #!/bin/python3
 
 import sys
+from collections import deque
 sys.path.append('..')
+packet_queue = deque()
 
-from  Can.comms import Radio
+from Can.comms import Packet
+import Can.comms as comms
 import gi
 import time
 gi.require_version('Gtk', '3.0')
@@ -11,73 +14,14 @@ from gi.repository import Gtk, GObject, GLib
 import threading, traceback
 from ast import literal_eval as l_eval
 
-SD_o = sys.stdout
+max_not_none_timestamp = time.time()
+first_timestamp = time.time() 
+comms.SD_o = comms.SD('log.txt')
 
-#class Radio:
-    
- #   def __init__(self):
-  #      pass
-    
-   # def recv(self):
-    #    time.sleep(0.5)
-
-    #def send(self, packet):
-     #   pass
-
-
-class Packet:
-    def __init__(self, timestamp=None, temperature=None, pressure=None, humidity=None, gps_position=None, acceleration=None, magnetometer_reading=None, altitude=None):
-        self.timestamp = timestamp
-        self.temperature = temperature
-        self.pressure = pressure
-        self.humidity = humidity
-        self.gps_position = gps_position
-        self.acceleration = acceleration
-        self.magnetometer_reading = magnetometer_reading
-        self.altitude = altitude
-        
-    def encode(self):
-        # Encode the packet into a string
-        packet_string = ';'+ str(self.timestamp) + ";" + str(self.temperature) + ";" + str(self.pressure) + ";"
-        packet_string += str(self.humidity) + ";" + str(self.gps_position) + ";" + str(self.acceleration) + ";"
-        packet_string += str(self.magnetometer_reading) + ';' + str(self.altitude) + ';'
-        return packet_string
-    
-    def decode(self, bytestream):
-        # Decode the bytestream and update the packet's attributes
-        if bytestream == None:
-            SD_o.write("No data to decode\n")
-            return
-        packet_string = str(bytestream).strip()
-        packet_parts = packet_string.split(";")[1:-1]
-        print(packet_parts)
-
-
-        # assigning values from packet
-        if packet_parts[0] != '':
-            self.timestamp = packet_parts[0]
-        if packet_parts[1] != '':
-            self.temperature = float(packet_parts[1])
-        if packet_parts[2] != '':
-            self.pressure = float(packet_parts[2])
-        if packet_parts[3] != '':
-            self.humidity = float(packet_parts[3])
-        if packet_parts[4] != '':
-            self.gps_position = l_eval(packet_parts[4])
-        if packet_parts[5] != '':
-            self.acceleration = l_eval(packet_parts[5])
-        if packet_parts[6] != '':
-            self.magnetometer_reading = l_eval(packet_parts[6])
-        if packet_parts[7] != '':
-            self.altitude = float(packet_parts[7])
-
-    def __str__(self) -> str:
-        return f"Packet({self.timestamp},{self.temperature},{self.pressure},{self.humidity},\
-            {self.gps_position},{self.acceleration},{self.magnetometer_reading},{self.altitude})"
 
 class RadioAppWindow:
 
-    radio = Radio()
+    radio = comms.Radio()
 
     def __init__(self):
         #Gtk.Window.__init__(self, title="Radio App")
@@ -107,24 +51,33 @@ class RadioAppWindow:
         self.send_button.connect("clicked", self.send_GPS_Pos)
         self.GPSPos_in.connect('activate', self.send_GPS_Pos)
         self.pressure_in.connect('activate', self.send_GPS_Pos)
-        
+
+
+    def update(self):
+        while len(packet_queue):
+            packet = packet_queue.popleft()
+            comms.SD_o.write(str(packet) + 'packet in GUI update')
+            # Update the liststore with the data from the packet
+            self.liststore.append([packet.timestamp, str(packet.temperature), str(packet.pressure), str(packet.humidity), str(packet.gps_position), str(packet.acceleration), str(packet.magnetometer_reading), str(packet.altitude)])
+
+            # If there are more than 10 packets in the liststore, remove the oldest one
+            if len(self.liststore) > 10:
+                self.liststore.remove(self.liststore[0].iter)
 
 
     def listen_for_radio(self):
         while True:
             packet = Packet(timestamp=time.ctime(), temperature=None)
             packet.decode(self.radio.recv())
-            SD_o.write(str(packet) + '\n')
-            def update():
-                # Update the liststore with the data from the packet
-                self.liststore.append([packet.timestamp, str(packet.temperature), str(packet.pressure), str(packet.humidity), str(packet.gps_position), str(packet.acceleration), str(packet.magnetometer_reading), str(packet.altitude)])
-
-                # If there are more than 10 packets in the liststore, remove the oldest one
-                if len(self.liststore) > 10:
-                    self.liststore.remove(self.liststore[0].iter)
+            if not (packet.temperature is None):
+                max_not_none_timestamp = time.time()
+                comms.SD_o.write(f'{max_not_none_timestamp - first_timestamp} time difference')
+                comms.SD_o.write(str(packet) + 'packet')
+                comms.SD_o.write(str(packet.temperature) + 'tempval')
+                packet_queue.append(packet)
 
             # Schedule the update function to be called in the main GTK thread
-            GLib.idle_add(update)
+            GLib.idle_add(self.update)
 
 
     def send_GPS_Pos(self, widget):
@@ -137,13 +90,13 @@ class RadioAppWindow:
             gps_pos = tuple(float(x) for x in gps_pos_text.split(','))
         except ValueError:
             # If the text could not be parsed as a tuple of floats, show an error message and return
-            SD_o.write(traceback.format_exc())
+            comms.SD_o.write(traceback.format_exc())
             gps_pos = None
         
         try: 
             press = float(pressure_text)
         except ValueError:
-            SD_o.write(traceback.format_exc())
+            comms.SD_o.write(traceback.format_exc())
             press = None
 
         # Create a new Packet object with the parsed GPS position

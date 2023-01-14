@@ -1,12 +1,13 @@
 # file for data handling
 from ast import literal_eval as l_eval
+import traceback
 
 import time
 import digitalio, board
 import busio, adafruit_rfm9x
 
 class Packet:
-    def __init__(self, timestamp='', temperature='', pressure='', humidity='', gps_position='', acceleration='', magnetometer_reading='', altitude=''):
+    def __init__(self, timestamp=None, temperature=None, pressure=None, humidity=None, gps_position=None, acceleration=None, magnetometer_reading=None, altitude=None):
         self.timestamp = timestamp
         self.temperature = temperature
         self.pressure = pressure
@@ -32,6 +33,12 @@ class Packet:
         packet_parts = packet_string.split(";")[1:-1]
         print(packet_parts)
 
+        try: 
+            if len(packet_parts) != 8:
+                raise ValueError("Invalid Packet")
+        except ValueError as e:
+            SD_o.write(traceback.format_exc())
+            return False
 
 		# assigning values from packet
         if packet_parts[0] != '':
@@ -81,9 +88,15 @@ class Radio:
         self.rfm9x = adafruit_rfm9x.RFM9x(spi, cs, rst, freq)
         self.rfm9x.tx_power = power
     def send(self, msg:str):
-        self.rfm9x.send(bytes(str(msg), "ascii"))
+        self.rfm9x.send(bytes(str(msg), "utf-8"))
     def recv(self, timeout = 0.5):
-        return self.rfm9x.receive(timeout=timeout)
+        packet = self.rfm9x.receive(timeout=timeout)
+        if packet is None:
+            print("no packet")
+        else:
+            print("packet")
+            SD_o.write(f"RSSI:{self.rfm9x.last_rssi}")
+            return packet
     
 
 

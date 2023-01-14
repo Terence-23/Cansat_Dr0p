@@ -10,3 +10,4 @@
 .pio/build/**
 .pio/libdeps
 ground_station/target
+**/log.*
