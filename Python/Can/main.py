@@ -1,11 +1,12 @@
 #!/bin/python3
+from typing import Tuple
 import comms, sensor
 import time
 import board, digitalio
 import threading
 import pwmio
 
-import adafruit_motor
+from adafruit_motor import servo
 
 
 class Servo:
@@ -14,14 +15,13 @@ class Servo:
     right = 0
 
     def __init__(self, pwm = pwmio.PWMOut(board.D23, frequency=50)) -> None:
-        self.s = adafruit_motor.servo.Servo(pwm, min_pulse=750, max_pulse=2250)
+        self.s = servo.Servo(pwm, min_pulse=750, max_pulse=2250)
 
     def rotate(self, angle:int):
         self.s.angle = angle
 
 import math
 
-servo:Servo
 
 
 def rotate_vector(pitch, roll, vector):
@@ -125,11 +125,12 @@ def get_rotation_difference(current_heading, desired_heading):
         difference += 360
     return difference
 
-last_rotate = 0
-
-def nav(packet: comms.Packet):
-    global e, last_rotate
+def nav(packet: comms.Packet, servo: Servo, e: float, 
+    last_rotate: float, lsm: sensor.LSM303, gps: sensor.L76x, 
+    desiredPos: Tuple[float, float]):
+    # global e, last_rotate
     print(packet)
+    pitch, roll = calculate_angles(*lsm.getAcceleration())
     # 
     if time.time() < last_rotate + 0.5:
         return
@@ -177,11 +178,8 @@ def nav(packet: comms.Packet):
     thread.start()
 
 
-# rotation acceptable error (degrees)
-e = 4
-
 def init():
-    global lsm, bme, gps, radio, pitch, roll, desiredPos
+    # global lsm, bme, gps, radio, pitch, roll, desiredPos
     desiredPos = (0,0)
     lsm = sensor.LSM303()
     bme = sensor.BME(i2c=board.I2C())
@@ -190,13 +188,14 @@ def init():
     gps = sensor.L76x()
     radio = comms.Radio(comms.CS, comms.RESET, comms.PWR, comms.FREQ)
     time.sleep(15)
-    pitch, roll = calculate_angles(*lsm.getAcceleration())
+    
     time.sleep(4)
     lsm.mag = calibrate(lsm.mag)
     servo = Servo()
+    return lsm, bme, gps, radio, desiredPos, servo
 
 
-def update():
+def update(gps, radio, bme, lsm, servo, e, last_rotate, desiredPos):
     gps.refresh()
     Packet = comms.Packet(time.ctime(), temperature=bme.getTemp(), pressure=bme.getPress(), humidity=bme.getHum(), gps_position=(gps.getLat(), gps.getLon()),\
          acceleration= lsm.getAcceleration(), magnetometer_reading= lsm.getMagnetic(), altitude=bme.getAltitude())
@@ -208,15 +207,21 @@ def update():
     comms.SD_o.write(_in)
     packet = comms.Packet()
     packet.decode(_in)
-    bme.setSeaLevelPressure(packet.pressure if packet.pressure != '' else bme.getSeaLevelPressure())
-    desiredPos = packet.gps_position if packet.gps_position != '' else desiredPos
-    nav(Packet)
+    print("before check", desiredPos)
+    bme.setSeaLevelPressure(packet.pressure if packet.pressure != None else bme.getSeaLevelPressure())
+    desiredPos = packet.gps_position if packet.gps_position != None else desiredPos
+    print("after check", desiredPos)
+    nav(Packet, servo, e, last_rotate, lsm, gps, desiredPos)
+    return desiredPos, last_rotate
 
 
 def main():
-    init()
+    lsm, bme, gps, radio, desiredPos, servo = init()
+    last_rotate = 0
+    E = 4
+    print(f"mainDP {desiredPos}")
     while 1:
-        update()
+        desiredPos, last_rotate = update(gps, radio, bme, lsm, servo, E, last_rotate, desiredPos)
 
 
 if __name__ =="__main__":

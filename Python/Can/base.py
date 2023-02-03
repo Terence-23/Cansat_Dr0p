@@ -41,10 +41,13 @@ def update():
 
 
 def main():
-    init()
-    while 1:
-        update()
-
+    try:
+        init()
+        while 1:
+            update()
+    except Exception as e:
+        with open('log.out') as f:
+            f.write(f"Exception: {e}")
 
 if __name__ =="__main__":
     main()

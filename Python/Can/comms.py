@@ -22,6 +22,8 @@ class Packet:
         packet_string = ';'+ str(self.timestamp) + ";" + str(self.temperature) + ";" + str(self.pressure) + ";"
         packet_string += str(self.humidity) + ";" + str(self.gps_position) + ";" + str(self.acceleration) + ";"
         packet_string += str(self.magnetometer_reading) + ';' + str(self.altitude) + ';'
+        SD_o.write(len(packet_string))
+        print(len(packet_string))
         return packet_string
     
     def decode(self, bytestream):
@@ -41,21 +43,21 @@ class Packet:
             return False
 
 		# assigning values from packet
-        if packet_parts[0] != '':
+        if packet_parts[0] != 'None':
             self.timestamp = packet_parts[0]
-        if packet_parts[1] != '':
+        if packet_parts[1] != 'None':
             self.temperature = float(packet_parts[1])
-        if packet_parts[2] != '':
+        if packet_parts[2] != 'None':
             self.pressure = float(packet_parts[2])
-        if packet_parts[3] != '':
+        if packet_parts[3] != 'None':
             self.humidity = float(packet_parts[3])
-        if packet_parts[4] != '':
+        if packet_parts[4] != 'None':
             self.gps_position = l_eval(packet_parts[4])
-        if packet_parts[5] != '':
+        if packet_parts[5] != 'None':
             self.acceleration = l_eval(packet_parts[5])
-        if packet_parts[6] != '':
+        if packet_parts[6] != 'None':
             self.magnetometer_reading = l_eval(packet_parts[6])
-        if packet_parts[7] != '':
+        if packet_parts[7] != 'None':
             self.altitude = float(packet_parts[7])
 
     def __str__(self) -> str:
@@ -88,7 +90,7 @@ class Radio:
         self.rfm9x = adafruit_rfm9x.RFM9x(spi, cs, rst, freq)
         self.rfm9x.tx_power = power
     def send(self, msg:str):
-        self.rfm9x.send(bytes(str(msg), "utf-8"))
+        self.rfm9x.send_with_ack(bytes(str(msg), "ascii"))
     def recv(self, timeout = 0.5):
         packet = self.rfm9x.receive(timeout=timeout)
         if packet is None:

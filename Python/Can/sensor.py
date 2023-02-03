@@ -25,6 +25,7 @@ class BME:
         self.sensor.sea_level_pressure = PRESSUREHPA
     
     def setSeaLevelPressure(self, pressure):
+        print(pressure)
         self.sensor.sea_level_pressure = pressure
 
     def getSeaLevelPressure(self):

@@ -11,3 +11,4 @@
 .pio/libdeps
 ground_station/target
 **/log.*
+**/*.h264
