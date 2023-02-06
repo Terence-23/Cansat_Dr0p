@@ -73,6 +73,7 @@ class Packet:
         elif self.packet_type == PacketType.EXTENDED:
             gps_lat, gps_lon, ax, ay, az, mx, my, mz = self.payload.values()
             payload = ';'.join(map(str, (gps_lat, gps_lon, ax, ay, az, mx, my, mz)))
+        else: raise ValueError("Invalid packet type")
         return f'{packet_type};{timestamp};{payload}'
     
     def to_json(self):
