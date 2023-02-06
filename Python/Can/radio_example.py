@@ -2,6 +2,7 @@ import board
 import busio
 import digitalio
 import time
+import traceback
 
 import adafruit_rfm9x
 
@@ -37,6 +38,7 @@ rfm9x.tx_power = 20
 
 
 while True:
+  try:
     # Send a packet.  Note you can only send a packet up to 252 bytes in length.
     # This is a limitation of the radio packet size, so if you need to send larger
     # amounts of data you will need to break it into smaller send calls.  Each send
@@ -67,10 +69,13 @@ while True:
         # receive raw bytes and need to convert to a text format like ASCII
         # if you intend to do string processing on your data.  Make sure the
         # sending side is sending ASCII data before you try to decode!
-        packet_text = str(packet, "ascii")
-        print("Received (ASCII): {0}".format(packet_text))
+        #packet_text = str(packet, "ascii")
+        #print("Received (ASCII): {0}".format(packet_text))
         # Also read the RSSI (signal strength) of the last received message and
         # print it.
+        with open('log.out', 'a') as f:
+            f.write(f"{packet}")
         rssi = rfm9x.last_rssi
         print("Received signal strength: {0} dB".format(rssi))
-        
+  except Exception as e:
+    traceback.print_exc()  
