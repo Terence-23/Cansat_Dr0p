@@ -1,6 +1,7 @@
 from enum import Enum
 import json
 import time
+import traceback
 
 class PacketType(Enum):
     COMMAND = 'c'
@@ -61,7 +62,7 @@ class Packet:
             
             return cls(packet_type, timestamp, payload)
         except Exception as e:
-            print(e)
+            traceback.print_exc()
             raise ValueError("Caught Error during decode")
     
     
