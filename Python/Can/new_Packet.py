@@ -36,29 +36,34 @@ class Packet:
         
     @classmethod
     def decode(cls, string):
-        packet_type, timestamp, *payload = string.split(';')
-        packet_type = PacketType(packet_type)
-        
-        timestamp = float(timestamp)
-        
-        if packet_type == PacketType.COMMAND:
-            command, *args = payload
-            command = Command(command)
-            if args != ['None']:
-                args = [float(arg) for arg in args]
-            else:
-                args = None
-            payload = {'command': command, 'args': args}
-        
-        elif packet_type == PacketType.BASE:
-            temp, pressure, humidity, altitude = map(float, payload)
-            payload = {'temp': temp, 'pressure': pressure, 'humidity': humidity, 'altitude': altitude}
-        
-        elif packet_type == PacketType.EXTENDED:
-            gps_lat, gps_lon, ax, ay, az, mx, my, mz = map(float, payload)
-            payload = {'lat': gps_lat, 'lon':gps_lon, 'acceleration_x': ax, 'acceleration_y': ay, 'acceleration_z': az, 'magnetometer_x': mx, 'magnetometer_y': my, 'magnetometer_z': mz}
-        
-        return cls(packet_type, timestamp, payload)
+        try:
+            packet_type, timestamp, *payload = string.split(';')
+            packet_type = PacketType(packet_type)
+            
+            timestamp = float(timestamp)
+            
+            if packet_type == PacketType.COMMAND:
+                command, *args = payload
+                command = Command(command)
+                if args != ['None']:
+                    args = [float(arg) for arg in args]
+                else:
+                    args = None
+                payload = {'command': command, 'args': args}
+            
+            elif packet_type == PacketType.BASE:
+                temp, pressure, humidity, altitude = map(float, payload)
+                payload = {'temp': temp, 'pressure': pressure, 'humidity': humidity, 'altitude': altitude}
+            
+            elif packet_type == PacketType.EXTENDED:
+                gps_lat, gps_lon, ax, ay, az, mx, my, mz = map(float, payload)
+                payload = {'lat': gps_lat, 'lon':gps_lon, 'acceleration_x': ax, 'acceleration_y': ay, 'acceleration_z': az, 'magnetometer_x': mx, 'magnetometer_y': my, 'magnetometer_z': mz}
+            
+            return cls(packet_type, timestamp, payload)
+        except Exception as e:
+            print(e)
+            raise ValueError("Caught Error during decode")
+    
     
     def encode(self):
         packet_type = self.packet_type.value

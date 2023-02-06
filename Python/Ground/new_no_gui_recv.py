@@ -15,13 +15,16 @@ first_timestamp = time.time()
 
 def listen_for_radio():
         while True:
-            
-            packet = Packet.decode(radio.recv())
-            if not (packet.payload["temp"] is None):
-                comms.SD_o.write(f'{time.time() - first_timestamp} time difference')
-                comms.SD_o.write(str(packet) + 'packet')
-                comms.SD_o.write(str(packet.payload['temp']) + 'tempval')
-                #packet_queue.append(packet)
+            try:
+                packet = Packet.decode(radio.recv())
+                print(packet.to_json())
+                if not (packet.payload["temp"] is None):
+                    comms.SD_o.write(f'{time.time() - first_timestamp} time difference')
+                    comms.SD_o.write(str(packet) + 'packet')
+                    comms.SD_o.write(str(packet.payload['temp']) + 'tempval')
+                    #packet_queue.append(packet)
+            except Exception as e:
+                print(e)
 
             # Schedule the update function to be called in the main GTK thread
             #GLib.idle_add(self.update)

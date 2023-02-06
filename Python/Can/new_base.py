@@ -30,6 +30,12 @@ def update():
         _in = radio.recv()
         
         print(_in)
+        try:
+            packet = new_Packet.Packet.decode(_in)
+            print(packet.to_json())
+            
+        except Exception:
+            print('could not decode packet')
         
         # comms.SD_o.write(_in)
         # packet = comms.Packet()
