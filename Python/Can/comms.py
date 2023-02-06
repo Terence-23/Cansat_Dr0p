@@ -98,7 +98,7 @@ class Radio:
         else:
             print("packet")
             SD_o.write(f"RSSI:{self.rfm9x.last_rssi}")
-            return packet
+            return str(packet, 'ascii')
     
 
 
