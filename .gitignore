@@ -12,3 +12,5 @@
 ground_station/target
 **/log.*
 **/*.h264
+**/*.mp4
+**/sampleData.*

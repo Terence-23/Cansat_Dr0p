@@ -1,3 +1,5 @@
+#!/bin/python
+
 from enum import Enum
 import json
 import time
@@ -83,12 +85,41 @@ class Packet:
         return f'{packet_type};{timestamp};{payload}'
     
     def to_json(self):
-        data = {k: str(v) for k, v in self.payload.items()}
+        if self.packet_type == PacketType.COMMAND:
+            
+            return json.dumps({
+            'packet_type': self.packet_type.value,
+            'timestamp': self.timestamp,
+            'payload': {k: str(v) for k, v in self.payload.items()}
+        })
+        
         return json.dumps({
             'packet_type': self.packet_type.value,
             'timestamp': self.timestamp,
-            'payload': data
+            'payload': self.payload
         })
+        
+    @classmethod
+    def read_multiple_from_file(cls, file_path):
+        with open(file_path) as json_file:
+            data = json.load(json_file)
+            packets = []
+            for i in data:
+                packets.append(cls.from_json(i))
+        return packets
+        
+    @classmethod
+    def from_json(cls, json):
+        if json['packet_type'] == 'c':
+            ptype = PacketType.COMMAND
+            return cls(packet_type = ptype, timestamp= float(json['timestamp']), payload=json['payload'])
+        elif json['packet_type'] == 'b':
+            ptype = PacketType.BASE
+        elif json['packet_type'] == 'e':
+            ptype = PacketType.EXTENDED
+        else:
+            raise ValueError("invalid packet json")
+        return cls(packet_type = ptype, timestamp= float(json['timestamp']), payload={k:float(v) for k, v in json['payload'].items()})
     
     @staticmethod    
     def create_command_packet(timestamp, command, args=None):
@@ -115,6 +146,15 @@ def main():
     assert ext_packet.encode() == ext_packet
 
     print(base_packet.to_json())
+    
+    with open('/home/jerzy/Data/Programowanie/Cansat/Python/Ground/sampleData.json') as json_file:
+        data = json.load(json_file)
+        packets = []
+        for i in data:
+            packets.append(Packet.from_json(i))
+            
+    print(len(packets))
+    print(packets[2].to_json())
 
 
 if __name__ == "__main__":
