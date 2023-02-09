@@ -77,7 +77,7 @@ class SD:
     
 CS = digitalio.DigitalInOut(board.D22)
 RESET = digitalio.DigitalInOut(board.D27)
-FREQ = 433.0
+FREQ = 433
 PWR = 20
 
 class Radio:

@@ -7,6 +7,7 @@ from lib.L76x import L76X
 # import math
 import comms
 from time import ctime
+from typing import Tuple
 import board
 import digitalio
 import adafruit_bme680
@@ -47,10 +48,10 @@ class LSM303:
     def __init__(self, i2c=board.I2C()) ->None:
         self.accel = adafruit_lsm303_accel.LSM303_Accel(i2c)
         self.mag = adafruit_lis2mdl.LIS2MDL(i2c)
-    def getAcceleration(self):
+    def getAcceleration(self) -> Tuple[float, float, float]:
         return self.accel.acceleration
 
-    def getMagnetic(self):
+    def getMagnetic(self) -> Tuple[float, float, float]:
         return self.mag.magnetic
 
 class L76x:
