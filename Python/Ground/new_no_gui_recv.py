@@ -22,7 +22,7 @@ def listen_for_radio():
                 packet = Packet.decode(radio.recv())
                 print(packet.to_json())
                 command_packet = Packet.create_command_packet(time.time(), Command.SETPRESS, 20.0)
-                radio.send(command_packet.encode())
+                radio.send_with_ack(command_packet.encode())
                 
                 if not (packet.payload["temp"] is None):
                     comms.SD_o.write(f'{time.time() - first_timestamp} time difference')

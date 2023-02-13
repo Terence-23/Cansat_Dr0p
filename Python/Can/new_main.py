@@ -216,7 +216,7 @@ def main():
 
             repeat_function()
 
-        in_text = radio.recv()
+        in_text = radio.recv(with_ack=True)
         if in_text is None:
             comms.SD_o.write('no Packet recieved')
             continue
@@ -233,10 +233,10 @@ def main():
                 sleeping = False
             elif command == Command.SETPOS:
                 desiredPos = in_packet.payload['args']
-                comms.SD_o(desiredPos)
+                comms.SD_o.write(desiredPos)
             elif command == Command.SETPRESS:
                 bme.setSeaLevelPressure(in_packet.payload['args'][0])
-                comms.SD_o(bme.getSeaLevelPressure())
+                comms.SD_o.write(bme.getSeaLevelPressure())
             else:
                 comms.SD_o.write(
                     "Invalid command in Packet: {}".format(in_packet.to_json()))
