@@ -73,7 +73,7 @@ class Packet:
         timestamp = str(self.timestamp)
         if self.packet_type == PacketType.COMMAND:
             command, args = self.payload.values()
-            args = str(args)
+            args = ';'.join([str(i) for i in args])
             payload = f'{command.value};{args}'
         elif self.packet_type == PacketType.BASE:
             temp, pressure, humidity, altitude = self.payload.values()
@@ -122,7 +122,7 @@ class Packet:
         return cls(packet_type = ptype, timestamp= float(json['timestamp']), payload={k:float(v) for k, v in json['payload'].items()})
     
     @staticmethod    
-    def create_command_packet(timestamp, command, args=None):
+    def create_command_packet(timestamp, command, *args):
         if not type(command) == Command:
             command = Command(command)
         return Packet(PacketType.COMMAND, timestamp, {'command': command, 'args': args})

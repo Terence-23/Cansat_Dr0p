@@ -1,3 +1,5 @@
+#!/bin/python
+
 import board
 import busio
 import digitalio
