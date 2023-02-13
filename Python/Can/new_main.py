@@ -137,6 +137,7 @@ def get_rotation_difference(current_heading, desired_heading):
 def main():
     # init
     sleeping = True
+    last_rotate = time.time()
     e = 4
     desiredPos = (0, 0)
     lsm = sensor.LSM303()
@@ -216,6 +217,10 @@ def main():
             repeat_function()
 
         in_text = radio.recv()
+        if in_text is None:
+            comms.SD_o.write('no Packet recieved')
+            continue
+        print(in_text)
         in_packet = Packet.decode(in_text)
 
         comms.SD_o.write(in_packet.to_json())
@@ -227,9 +232,11 @@ def main():
             elif command == Command.WAKE:
                 sleeping = False
             elif command == Command.SETPOS:
-                pass
+                desiredPos = in_packet.payload['args']
+                comms.SD_o(desiredPos)
             elif command == Command.SETPRESS:
-                pass
+                bme.setSeaLevelPressure(in_packet.payload['args'][0])
+                comms.SD_o(bme.getSeaLevelPressure())
             else:
                 comms.SD_o.write(
                     "Invalid command in Packet: {}".format(in_packet.to_json()))
@@ -237,3 +244,6 @@ def main():
         else:
             comms.SD_o.write(
                 "Packet not a command: {}".format(in_packet.to_json()))
+
+if __name__ == '__main__':
+    main()

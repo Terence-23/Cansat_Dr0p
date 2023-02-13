@@ -95,6 +95,7 @@ class Radio:
         packet = self.rfm9x.receive(timeout=timeout)
         if packet is None:
             print("no packet")
+            return None
         else:
             print("packet")
             SD_o.write(f"RSSI:{self.rfm9x.last_rssi}")
