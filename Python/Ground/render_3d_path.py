@@ -104,7 +104,7 @@ def main():
     ax = fig.add_subplot(111, projection='3d')
     
     ani = FuncAnimation(fig, update, frames=np.linspace(0, 2*np.pi, 2500), repeat=False,  interval=1000 * interval)
-    # plt.show(block =False)
+    plt.show()
     ani.save('file.mp4')
         
     
