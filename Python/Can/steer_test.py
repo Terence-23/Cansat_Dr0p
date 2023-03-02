@@ -8,6 +8,7 @@ import digitalio
 import threading
 import pwmio
 import math
+import numpy as np
 from adafruit_motor import servo
 from typing import Tuple
 from ast import literal_eval as l_eval
@@ -40,6 +41,38 @@ def rotate_vector(pitch, roll, vector):
     return (rotated_x, rotated_y, rotated_z)
 
 
+def calibrate_magnetometer(data, expected_ranges):
+    """
+    Calibrates a 3-axis magnetometer using two-point calibration.
+
+    Args:
+        data: A numpy array of shape (N, 3) containing magnetometer readings.
+        expected_ranges: A numpy array of shape (3, 2) containing the expected range
+                         (minimum and maximum values) for each axis in a known magnetic field.
+
+    Returns:
+        A numpy array of shape (N, 3) containing calibrated magnetometer readings.
+    """
+    # Calculate offsets for each axis
+    offsets = (data.min(axis=0) + data.max(axis=0)) / 2
+
+    # Subtract offsets from each reading on the corresponding axis
+    data -= offsets
+
+    # Calculate scaling factors for each axis
+    ranges = data.max(axis=0) - data.min(axis=0)
+    scaling_factors = expected_ranges[:, 1] - expected_ranges[:, 0]
+    scaling_factors /= ranges
+
+    # Multiply each corrected reading on the corresponding axis by the scaling factor
+    data *= scaling_factors
+
+    # Add offsets back to each reading on the corresponding axis
+    data += offsets
+
+    return data
+
+
 def calculate_angles(acceleration_x, acceleration_y, acceleration_z):
     pitch = math.atan2(acceleration_x, math.sqrt(
         acceleration_y * acceleration_y + acceleration_z * acceleration_z))
@@ -54,28 +87,28 @@ def calibrate(magnetometer: sensor.adafruit_lis2mdl.LIS2MDL):
     # start_time = time.monotonic()
     hardiron_calibration = l_eval(open("cal_data").readline())
 
-    # Calculate biases and scaling factors for the x-axis
-    bias_x = (hardiron_calibration[0][0] + hardiron_calibration[0][1]) / 2
-    scaling_factor_x = (
-        hardiron_calibration[0][1] - hardiron_calibration[0][0]) / 2
+    # # Calculate biases and scaling factors for the x-axis
+    # bias_x = (hardiron_calibration[0][0] + hardiron_calibration[0][1]) / 2
+    # scaling_factor_x = (
+    #     hardiron_calibration[0][1] - hardiron_calibration[0][0]) / 2
 
-    # Calculate biases and scaling factors for the y-axis
-    bias_y = (hardiron_calibration[1][0] + hardiron_calibration[1][1]) / 2
-    scaling_factor_y = (
-        hardiron_calibration[1][1] - hardiron_calibration[1][0]) / 2
+    # # Calculate biases and scaling factors for the y-axis
+    # bias_y = (hardiron_calibration[1][0] + hardiron_calibration[1][1]) / 2
+    # scaling_factor_y = (
+    #     hardiron_calibration[1][1] - hardiron_calibration[1][0]) / 2
 
-    # Calculate biases and scaling factors for the z-axis
-    bias_z = (hardiron_calibration[2][0] + hardiron_calibration[2][1]) / 2
-    scaling_factor_z = (
-        hardiron_calibration[2][1] - hardiron_calibration[2][0]) / 2
+    # # Calculate biases and scaling factors for the z-axis
+    # bias_z = (hardiron_calibration[2][0] + hardiron_calibration[2][1]) / 2
+    # scaling_factor_z = (
+    #     hardiron_calibration[2][1] - hardiron_calibration[2][0]) / 2
 
-    # Assign biases to the offset property
-    magnetometer.offset = (bias_x, bias_y, bias_z)
+    # # Assign biases to the offset property
+    # magnetometer.offset = (bias_x, bias_y, bias_z)
 
-    # Assign scaling factors to the scale property
-    magnetometer.scale = (scaling_factor_x, scaling_factor_y, scaling_factor_z)
+    # # Assign scaling factors to the scale property
+    # magnetometer.scale = (scaling_factor_x, scaling_factor_y, scaling_factor_z)
 
-    return magnetometer
+    return hardiron_calibration
 
 
 def compass_reading(magnetometer_x, magnetometer_y, magnetometer_z):
@@ -84,7 +117,7 @@ def compass_reading(magnetometer_x, magnetometer_y, magnetometer_z):
     # magnetometer_y_rad = math.radians(magnetometer_y)
 
     # Calculate the yaw angle in radians
-    yaw = math.atan2(magnetometer_z, magnetometer_y)
+    yaw = -math.atan2(magnetometer_z, magnetometer_y)
 
     # Convert the yaw angle to degrees
     yaw_degrees = math.degrees(yaw)
@@ -132,25 +165,28 @@ def main():
     sleeping = True
     last_rotate = time.time()
     e = 4
-    desiredPos = (80, 72)
-    lsm = sensor.LSM303()
+    desiredPos = (90, 21.040)
     bme = sensor.BME(i2c=board.I2C())
+    lsm = sensor.LSM303()
     gps = sensor.L76x()
-    lsm.mag = calibrate(lsm.mag)
+    hardiron_calibration = calibrate(lsm.mag)
     servo = Servo()
 
     while True:
         pitch, roll = calculate_angles(*lsm.getAcceleration())
         #
         if time.time() < last_rotate + 0.5:
-            return
+            continue
 
         last_rotate = time.time()
 
-        mag_corected = rotate_vector(pitch, roll, lsm.getMagnetic())
+        # mag_corected = rotate_vector(pitch, roll, lsm.getMagnetic())
+        mag_corected = calibrate_magnetometer(np.array(lsm.getMagnetic()), hardiron_calibration)
         compass = compass_reading(*mag_corected)
+        # compass = compass_reading(*lsm.getMagnetic())
         rotation = get_rotation((52.218, 21.040), desiredPos)
         rotation_to_do = get_rotation_difference(compass, rotation)
+        print(f"compass: {compass}, rotation: {rotation}, rotation_to_do: {rotation_to_do}")
 
         if rotation_to_do < -e:
             # go Left

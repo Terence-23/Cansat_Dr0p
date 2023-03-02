@@ -28,14 +28,14 @@ def calculate_angles(acceleration_x, acceleration_y, acceleration_z):
 yaw_min, yaw_max = 0, 0
 
 
-def calculate_compass_reading(magnetometer_x, magnetometer_y): 
+def calculate_compass_reading(magnetometer_x, magnetometer_y, magnetometer_z): 
     global yaw_min, yaw_max
     # Convert the magnetometer readings to radians
     magnetometer_x_rad = math.radians(magnetometer_x)
     magnetometer_y_rad = math.radians(magnetometer_y)
     
     # Calculate the yaw angle in radians
-    yaw = math.atan2(magnetometer_y, magnetometer_x)
+    yaw = -math.atan2(magnetometer_z, magnetometer_y)
     
     # Convert the yaw angle to degrees
     yaw_degrees = math.degrees(yaw)
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     mag = calibrate(mag)
     try: 
         while True:
-            print(calculate_compass_reading(mag.magnetic[0], mag.magnetic[1]))
+            print(calculate_compass_reading(*mag.magnetic))
             time.sleep(0.2)
     except KeyboardInterrupt as e:
         print(f"min: {yaw_min}, max: {yaw_max}")
