@@ -63,7 +63,7 @@ def calibrate(magnetometer:adafruit_lis2mdl.LIS2MDL):
     print("Calibration complete:")
     print("hardiron_calibration =", hardiron_calibration)
 
-    with open('cal_data') as f:
+    with open('cal_data', 'w') as f:
         f.write(str(hardiron_calibration))
 
     # Calculate biases and scaling factors for the x-axis

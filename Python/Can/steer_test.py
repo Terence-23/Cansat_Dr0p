@@ -1,5 +1,6 @@
 #!/bin/python3
 
+import comms
 import time
 import sensor
 import board
@@ -77,13 +78,13 @@ def calibrate(magnetometer: sensor.adafruit_lis2mdl.LIS2MDL):
     return magnetometer
 
 
-def compass_reading(magnetometer_x, magnetometer_y, _=None):
+def compass_reading(magnetometer_x, magnetometer_y, magnetometer_z):
     # Convert the magnetometer readings to radians
-    magnetometer_x_rad = math.radians(magnetometer_x)
-    magnetometer_y_rad = math.radians(magnetometer_y)
+    # magnetometer_x_rad = math.radians(magnetometer_x)
+    # magnetometer_y_rad = math.radians(magnetometer_y)
 
     # Calculate the yaw angle in radians
-    yaw = math.atan2(magnetometer_y_rad, magnetometer_x_rad)
+    yaw = math.atan2(magnetometer_z, magnetometer_y)
 
     # Convert the yaw angle to degrees
     yaw_degrees = math.degrees(yaw)
@@ -125,7 +126,9 @@ def get_rotation_difference(current_heading, desired_heading):
 
 
 def main():
-    
+    comms.SD_o = comms.SD("steering.log")
+    SD_o = comms.SD_o
+    sensor.SD_o = comms.SD_o
     sleeping = True
     last_rotate = time.time()
     e = 4
@@ -146,7 +149,7 @@ def main():
 
         mag_corected = rotate_vector(pitch, roll, lsm.getMagnetic())
         compass = compass_reading(*mag_corected)
-        rotation = get_rotation((gps.getLat(), gps.getLon()), desiredPos)
+        rotation = get_rotation((52.218, 21.040), desiredPos)
         rotation_to_do = get_rotation_difference(compass, rotation)
 
         if rotation_to_do < -e:
@@ -184,3 +187,7 @@ def main():
                 pass
 
         repeat_function()
+
+if __name__ == '__main__':
+    main()
+
