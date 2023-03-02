@@ -89,10 +89,12 @@ class Radio:
 
         self.rfm9x = adafruit_rfm9x.RFM9x(spi, cs, rst, freq)
         self.rfm9x.tx_power = power
+        
     def send(self, msg:str):
         self.rfm9x.send_with_ack(bytes(str(msg), "ascii"))
-    def recv(self, timeout = 0.5):
-        packet = self.rfm9x.receive(timeout=timeout)
+        
+    def recv(self, timeout = 0.5, with_ack=False):
+        packet = self.rfm9x.receive(timeout=timeout, with_ack=with_ack)
         if packet is None:
             print("no packet")
             return None

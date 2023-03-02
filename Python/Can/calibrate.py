@@ -54,7 +54,7 @@ def calibrate(magnetometer:adafruit_lis2mdl.LIS2MDL):
     hardiron_calibration = [[1000, -1000], [1000, -1000], [1000, -1000]]
 
     # Update the high and low extremes
-    while time.monotonic() - start_time < 10.0:
+    while time.monotonic() - start_time < 15.0:
         magval = magnetometer.magnetic
         print("Calibrating - X:{0:10.2f}, Y:{1:10.2f}, Z:{2:10.2f} uT".format(*magval))
         for i, axis in enumerate(magval):
@@ -62,6 +62,9 @@ def calibrate(magnetometer:adafruit_lis2mdl.LIS2MDL):
             hardiron_calibration[i][1] = max(hardiron_calibration[i][1], axis)
     print("Calibration complete:")
     print("hardiron_calibration =", hardiron_calibration)
+
+    with open('cal_data') as f:
+        f.write(str(hardiron_calibration))
 
     # Calculate biases and scaling factors for the x-axis
     bias_x = (hardiron_calibration[0][0] + hardiron_calibration[0][1]) / 2
