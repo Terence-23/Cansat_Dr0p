@@ -3,6 +3,8 @@ from typing import Tuple
 import comms
 import sensor
 from new_Packet import Packet, PacketType, Command
+from ast import literal_eval as l_eval
+import numpy as np
 import time
 import board
 import digitalio
@@ -48,43 +50,9 @@ def calculate_angles(acceleration_x, acceleration_y, acceleration_z):
     return (pitch_degrees, roll_degrees)
 
 
-def calibrate(magnetometer: sensor.adafruit_lis2mdl.LIS2MDL):
-    start_time = time.monotonic()
-    hardiron_calibration = [[1000, -1000], [1000, -1000], [1000, -1000]]
-
-    # Update the high and low extremes
-    while time.monotonic() - start_time < 10.0:
-        magval = magnetometer.magnetic
-        print(
-            "Calibrating - X:{0:10.2f}, Y:{1:10.2f}, Z:{2:10.2f} uT".format(*magval))
-        for i, axis in enumerate(magval):
-            hardiron_calibration[i][0] = min(hardiron_calibration[i][0], axis)
-            hardiron_calibration[i][1] = max(hardiron_calibration[i][1], axis)
-    print("Calibration complete:")
-    print("hardiron_calibration =", hardiron_calibration)
-
-    # Calculate biases and scaling factors for the x-axis
-    bias_x = (hardiron_calibration[0][0] + hardiron_calibration[0][1]) / 2
-    scaling_factor_x = (
-        hardiron_calibration[0][1] - hardiron_calibration[0][0]) / 2
-
-    # Calculate biases and scaling factors for the y-axis
-    bias_y = (hardiron_calibration[1][0] + hardiron_calibration[1][1]) / 2
-    scaling_factor_y = (
-        hardiron_calibration[1][1] - hardiron_calibration[1][0]) / 2
-
-    # Calculate biases and scaling factors for the z-axis
-    bias_z = (hardiron_calibration[2][0] + hardiron_calibration[2][1]) / 2
-    scaling_factor_z = (
-        hardiron_calibration[2][1] - hardiron_calibration[2][0]) / 2
-
-    # Assign biases to the offset property
-    magnetometer.offset = (bias_x, bias_y, bias_z)
-
-    # Assign scaling factors to the scale property
-    magnetometer.scale = (scaling_factor_x, scaling_factor_y, scaling_factor_z)
-
-    return magnetometer
+def calibrate():
+    hardiron_calibration = np.array(l_eval(open("cal_data").readline()))
+    return hardiron_calibration
 
 
 def compass_reading(magnetometer_x, magnetometer_y, _=None):
@@ -125,6 +93,14 @@ def get_rotation(point1, point2):
     return angle
 
 
+def normalize(_magvals, hardiron_calibration):
+    ret = [0, 0, 0]
+    for i, axis in enumerate(_magvals):
+        minv, maxv = hardiron_calibration[i]
+        axis = min(max(minv, axis), maxv)  # keep within min/max calibration
+        ret[i] = (axis - minv) * 200 / (maxv - minv) + -100
+    return ret
+
 def get_rotation_difference(current_heading, desired_heading):
     difference = desired_heading - current_heading
     if difference > 180:
@@ -149,7 +125,7 @@ def main():
     time.sleep(15)
 
     time.sleep(4)
-    lsm.mag = calibrate(lsm.mag)
+    hardiron_calibration = calibrate()
     servo = Servo()
 
     while 1:
@@ -175,7 +151,7 @@ def main():
 
             last_rotate = time.time()
 
-            mag_corected = rotate_vector(pitch, roll, lsm.getMagnetic())
+            mag_corected = normalize(np.array(lsm.getMagnetic()), hardiron_calibration)
             compass = compass_reading(*mag_corected)
             rotation = get_rotation((gps.getLat(), gps.getLon()), desiredPos)
             rotation_to_do = get_rotation_difference(compass, rotation)
