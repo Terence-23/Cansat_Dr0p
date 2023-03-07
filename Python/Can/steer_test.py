@@ -85,7 +85,7 @@ def calculate_angles(acceleration_x, acceleration_y, acceleration_z):
 
 def calibrate(magnetometer: sensor.adafruit_lis2mdl.LIS2MDL):
     # start_time = time.monotonic()
-    hardiron_calibration = l_eval(open("cal_data").readline())
+    hardiron_calibration = np.array(l_eval(open("cal_data").readline()))
 
     # # Calculate biases and scaling factors for the x-axis
     # bias_x = (hardiron_calibration[0][0] + hardiron_calibration[0][1]) / 2
@@ -115,6 +115,17 @@ def compass_reading(magnetometer_x, magnetometer_y, magnetometer_z):
     # Convert the magnetometer readings to radians
     # magnetometer_x_rad = math.radians(magnetometer_x)
     # magnetometer_y_rad = math.radians(magnetometer_y)
+    
+    # normvals = normalize(magvals, hardiron_calibration)
+    # print("magnetometer: %s -> %s" % (magvals, normvals))
+
+    # # we will only use X and Y for the compass calculations, so hold it level!
+    # compass_heading = int(-math.atan2(normvals[2], normvals[1]) * 180.0 / math.pi)
+    # raw_compass_heading = int(-math.atan2(magvals[2], magvals[1]) * 180.0 / math.pi)
+    # # compass_heading is between -180 and +180 since atan2 returns -pi to +pi
+    # # this translates it to be between 0 and 360
+    # compass_heading += 450
+    # compass_heading %= 360
 
     # Calculate the yaw angle in radians
     yaw = -math.atan2(magnetometer_z, magnetometer_y)
@@ -123,7 +134,7 @@ def compass_reading(magnetometer_x, magnetometer_y, magnetometer_z):
     yaw_degrees = math.degrees(yaw)
 
     # Normalize the compass reading to a range of 0-360 degrees
-    compass_reading = (yaw_degrees + 360) % 360
+    compass_reading = (yaw_degrees + 450) % 360
 
     return compass_reading
 
@@ -157,6 +168,14 @@ def get_rotation_difference(current_heading, desired_heading):
         difference += 360
     return difference
 
+def normalize(_magvals, hardiron_calibration):
+    ret = [0, 0, 0]
+    for i, axis in enumerate(_magvals):
+        minv, maxv = hardiron_calibration[i]
+        axis = min(max(minv, axis), maxv)  # keep within min/max calibration
+        ret[i] = (axis - minv) * 200 / (maxv - minv) + -100
+    return ret
+
 
 def main():
     comms.SD_o = comms.SD("steering.log")
@@ -164,7 +183,7 @@ def main():
     sensor.SD_o = comms.SD_o
     sleeping = True
     last_rotate = time.time()
-    e = 4
+    e = 15
     desiredPos = (90, 21.040)
     bme = sensor.BME(i2c=board.I2C())
     lsm = sensor.LSM303()
@@ -181,7 +200,7 @@ def main():
         last_rotate = time.time()
 
         # mag_corected = rotate_vector(pitch, roll, lsm.getMagnetic())
-        mag_corected = calibrate_magnetometer(np.array(lsm.getMagnetic()), hardiron_calibration)
+        mag_corected = normalize(np.array(lsm.getMagnetic()), hardiron_calibration)
         compass = compass_reading(*mag_corected)
         # compass = compass_reading(*lsm.getMagnetic())
         rotation = get_rotation((52.218, 21.040), desiredPos)
@@ -191,13 +210,13 @@ def main():
         if rotation_to_do < -e:
             # go Left
             def repeat_function():
-                # replace function with function to rotate servo by 45 degrees
                 servo.rotate(servo.left)
-                start = time.time()
+                start = time.monotonic()
                 des_rotation = get_rotation(
                     (gps.getLat(), gps.getLon()), desiredPos)
+                print('go left')
                 while compass_reading(*rotate_vector(pitch, roll, lsm.getMagnetic())) < \
-                        des_rotation - e and time.time() < start + 0.5:
+                        des_rotation - e and time.monotonic() < start + 2:
                     pass
                     # Add a delay if necessary
                     time.sleep(0.020)
@@ -206,13 +225,13 @@ def main():
         elif rotation_to_do > e:
             # go Right
             def repeat_function():
-                # replace function with function to rotate servo by 45 degrees
                 servo.rotate(servo.right)
-                start = time.time()
+                start = time.monotonic()
                 des_rotation = get_rotation(
                     (gps.getLat(), gps.getLon()), desiredPos)
+                print('go right')
                 while compass_reading(*rotate_vector(pitch, roll, lsm.getMagnetic())) > \
-                        des_rotation + e and time.time() < start + 0.5:
+                        des_rotation + e and time.monotonic() < start + 2:
                     pass
                     # Add a delay if necessary
                     time.sleep(0.020)
@@ -220,6 +239,7 @@ def main():
 
         else:
             def repeat_function():
+                servo.rotate(servo.neutral)
                 pass
 
         repeat_function()
