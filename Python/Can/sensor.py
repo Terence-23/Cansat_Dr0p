@@ -77,9 +77,9 @@ class L76x:
             try:
                 self.gps = self.startGPS()
             except Exception as e:
-                SD_o.write(f'{e}')
+                SD_o.write(comms.FL_ERROR, f'{e}')
         
-        SD_o.write('GPS ready')
+        SD_o.write(comms.FL_GPS, 'GPS ready')
         self.refresh()
 
 
@@ -92,7 +92,8 @@ class L76x:
             raise e
 
         except Exception as e:
-            SD_o.write(f'{e}')
+            print(e)
+            SD_o.write(comms.FL_ERROR, f'{e}')
 
     def getLat(self):
         # if self.l_rf_time + self.refresh_delay <= time.time() * 1000: self.refresh()

@@ -6,6 +6,12 @@ import time
 import digitalio, board
 import busio, adafruit_rfm9x
 
+FL_PACKET="PACKET"
+FL_STEER="STEERING"
+FL_GPS="GPS"
+FL_ERROR="ERROR"
+FL_DEBUG="DEBUG"
+
 class Packet:
     def __init__(self, timestamp=None, temperature=None, pressure=None, humidity=None, gps_position=None, acceleration=None, magnetometer_reading=None, altitude=None):
         self.timestamp = timestamp
@@ -22,14 +28,14 @@ class Packet:
         packet_string = ';'+ str(self.timestamp) + ";" + str(self.temperature) + ";" + str(self.pressure) + ";"
         packet_string += str(self.humidity) + ";" + str(self.gps_position) + ";" + str(self.acceleration) + ";"
         packet_string += str(self.magnetometer_reading) + ';' + str(self.altitude) + ';'
-        SD_o.write(len(packet_string))
+        SD_o.write(FL_DEBUG, len(packet_string))
         print(len(packet_string))
         return packet_string
     
     def decode(self, bytestream):
         # Decode the bytestream and update the packet's attributes
         if bytestream == None:
-            SD_o.write("No data to decode")
+            SD_o.write(FL_ERROR, "No data to decode")
             return
         packet_string = str(bytestream).strip()
         packet_parts = packet_string.split(";")[1:-1]
@@ -39,7 +45,7 @@ class Packet:
             if len(packet_parts) != 8:
                 raise ValueError("Invalid Packet")
         except ValueError as e:
-            SD_o.write(traceback.format_exc())
+            SD_o.write(FL_ERROR, traceback.format_exc())
             return False
 
 		# assigning values from packet
@@ -70,14 +76,14 @@ class SD:
     def __init__(self, f_name) -> None:
         self.f_name = f_name
 
-    def write(self, packet):
+    def write(self, flag, packet):
         with open(self.f_name, 'a', encoding="utf-8") as f:
             # write the packet with a timestamp
-            f.write(f"{time.ctime()} :: {packet}\n")
+            f.write(f"{time.ctime()}::{flag}::{packet}\n")
     
 CS = digitalio.DigitalInOut(board.D22)
 RESET = digitalio.DigitalInOut(board.D27)
-FREQ = 433
+FREQ = 433.25
 PWR = 20
 
 class Radio:
@@ -100,7 +106,7 @@ class Radio:
             return None
         else:
             print("packet")
-            SD_o.write(f"RSSI:{self.rfm9x.last_rssi}")
+            SD_o.write(FL_DEBUG, f"RSSI:{self.rfm9x.last_rssi}")
             return str(packet, 'ascii')
     
 

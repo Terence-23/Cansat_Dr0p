@@ -188,6 +188,7 @@ def main():
     bme = sensor.BME(i2c=board.I2C())
     lsm = sensor.LSM303()
     gps = sensor.L76x()
+    
     hardiron_calibration = calibrate(lsm.mag)
     servo = Servo()
 

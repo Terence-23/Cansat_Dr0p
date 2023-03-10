@@ -11,6 +11,7 @@ import digitalio
 import threading
 import pwmio
 import math
+import traceback
 from adafruit_motor import servo
 
 
@@ -55,19 +56,30 @@ def calibrate():
     return hardiron_calibration
 
 
-def compass_reading(magnetometer_x, magnetometer_y, _=None):
+def compass_reading(magnetometer_x, magnetometer_y, magnetometer_z):
     # Convert the magnetometer readings to radians
-    magnetometer_x_rad = math.radians(magnetometer_x)
-    magnetometer_y_rad = math.radians(magnetometer_y)
+    # magnetometer_x_rad = math.radians(magnetometer_x)
+    # magnetometer_y_rad = math.radians(magnetometer_y)
+    
+    # normvals = normalize(magvals, hardiron_calibration)
+    # print("magnetometer: %s -> %s" % (magvals, normvals))
+
+    # # we will only use X and Y for the compass calculations, so hold it level!
+    # compass_heading = int(-math.atan2(normvals[2], normvals[1]) * 180.0 / math.pi)
+    # raw_compass_heading = int(-math.atan2(magvals[2], magvals[1]) * 180.0 / math.pi)
+    # # compass_heading is between -180 and +180 since atan2 returns -pi to +pi
+    # # this translates it to be between 0 and 360
+    # compass_heading += 450
+    # compass_heading %= 360
 
     # Calculate the yaw angle in radians
-    yaw = math.atan2(magnetometer_y_rad, magnetometer_x_rad)
+    yaw = -math.atan2(magnetometer_z, magnetometer_y)
 
     # Convert the yaw angle to degrees
     yaw_degrees = math.degrees(yaw)
 
     # Normalize the compass reading to a range of 0-360 degrees
-    compass_reading = (yaw_degrees + 360) % 360
+    compass_reading = (yaw_degrees + 450) % 360
 
     return compass_reading
 
@@ -112,42 +124,83 @@ def get_rotation_difference(current_heading, desired_heading):
 
 def main():
     # init
-    sleeping = True
+    sleeping = False
     last_rotate = time.time()
-    e = 4
-    desiredPos = (0, 0)
-    lsm = sensor.LSM303()
-    bme = sensor.BME(i2c=board.I2C())
+    e = 10
+    desiredPos = (90, 0)
+    
     comms.SD_o = comms.SD('log.out')
     sensor.SD_o = comms.SD_o
+    
+    lsm = sensor.LSM303()
+    bme = sensor.BME(i2c=board.I2C())
     gps = sensor.L76x()
     radio = comms.Radio(comms.CS, comms.RESET, comms.PWR, comms.FREQ)
-    time.sleep(15)
 
-    time.sleep(4)
     hardiron_calibration = calibrate()
     servo = Servo()
 
     while 1:
+        in_text = radio.recv(with_ack=True)
+        if not in_text is None:
+            print(in_text)
+            try:
+                in_packet = Packet.decode(in_text)
+                        
+                comms.SD_o.write(comms.FL_PACKET, in_packet.to_json())
+
+                if in_packet.packet_type == PacketType.COMMAND:
+                    command = in_packet.payload['command']
+                    if command == Command.SLEEP:
+                        sleeping = True
+                    elif command == Command.WAKE:
+                        sleeping = False
+                    elif command == Command.SETPOS:
+                        desiredPos = in_packet.payload['args']
+                        comms.SD_o.write(comms.FL_DEBUG, desiredPos)
+                    elif command == Command.SETPRESS:
+                        bme.setSeaLevelPressure(in_packet.payload['args'][0])
+                        comms.SD_o.write(comms.FL_DEBUG, bme.getSeaLevelPressure())
+                    else:
+                        comms.SD_o.write(comms.FL_ERROR, 
+                            "Invalid command in Packet: {}".format(in_packet.to_json()))
+                else:
+                    comms.SD_o.write(comms.FL_ERROR, 
+                        "Packet not a command: {}".format(in_packet.to_json()))
+                
+            except KeyboardInterrupt as e:
+                raise e
+            
+            except Exception as e:
+                comms.SD_o.write(comms.FL_ERROR, traceback.format_exc())
+                traceback.print_exc()                
+            
+                
+        else: 
+            comms.SD_o.write(comms.FL_ERROR, 'no Packet recieved')    
+        
         packet_b = Packet.create_base_packet(
             time.time(), bme.getTemp(), bme.getPress(), bme.getHum(), bme.getAltitude())
 
-        comms.SD_o.write(packet_b.to_json())
+        comms.SD_o.write(comms.FL_PACKET, packet_b.to_json())
         radio.send(packet_b.encode())
 
         if not sleeping:
 
             gps.refresh()
+
+            print(gps.hasFix())
+
             packet_e = Packet.create_extended_packet(time.time(), gps.getLat(
             ), gps.getLon(), *lsm.getAcceleration(), *lsm.getMagnetic())
 
             radio.send(packet_e.encode())
-            comms.SD_o.write(packet_e.to_json())
+            comms.SD_o.write(comms.FL_PACKET, packet_e.to_json())
 
             pitch, roll = calculate_angles(*lsm.getAcceleration())
             #
-            if time.time() < last_rotate + 0.5:
-                return
+            if time.time() < last_rotate + 2.1:
+                continue
 
             last_rotate = time.time()
 
@@ -155,17 +208,21 @@ def main():
             compass = compass_reading(*mag_corected)
             rotation = get_rotation((gps.getLat(), gps.getLon()), desiredPos)
             rotation_to_do = get_rotation_difference(compass, rotation)
+            
+            print(f"compass: {compass}, rotation: {rotation}, rotation_to_do: {rotation_to_do}")
+
 
             if rotation_to_do < -e:
                 # go Left
                 def repeat_function():
                     # replace function with function to rotate servo by 45 degrees
+                    print('go left')
                     servo.rotate(servo.left)
                     start = time.time()
                     des_rotation = get_rotation(
                         (gps.getLat(), gps.getLon()), desiredPos)
                     while compass_reading(*rotate_vector(pitch, roll, lsm.getMagnetic())) < \
-                            des_rotation - e and time.time() < start + 0.5:
+                            des_rotation - e and time.time() < start + 2:
                         pass
                         # Add a delay if necessary
                         time.sleep(0.020)
@@ -176,11 +233,12 @@ def main():
                 def repeat_function():
                     # replace function with function to rotate servo by 45 degrees
                     servo.rotate(servo.right)
+                    print('go right')
                     start = time.time()
                     des_rotation = get_rotation(
                         (gps.getLat(), gps.getLon()), desiredPos)
                     while compass_reading(*rotate_vector(pitch, roll, lsm.getMagnetic())) > \
-                            des_rotation + e and time.time() < start + 0.5:
+                            des_rotation + e and time.time() < start + 2:
                         pass
                         # Add a delay if necessary
                         time.sleep(0.020)
@@ -190,36 +248,9 @@ def main():
                 def repeat_function():
                     pass
 
-            repeat_function()
+            threading.Thread(target=repeat_function())
+            
 
-        in_text = radio.recv(with_ack=True)
-        if in_text is None:
-            comms.SD_o.write('no Packet recieved')
-            continue
-        print(in_text)
-        in_packet = Packet.decode(in_text)
-
-        comms.SD_o.write(in_packet.to_json())
-
-        if in_packet.packet_type == PacketType.COMMAND:
-            command = in_packet.payload['command']
-            if command == Command.SLEEP:
-                sleeping = True
-            elif command == Command.WAKE:
-                sleeping = False
-            elif command == Command.SETPOS:
-                desiredPos = in_packet.payload['args']
-                comms.SD_o.write(desiredPos)
-            elif command == Command.SETPRESS:
-                bme.setSeaLevelPressure(in_packet.payload['args'][0])
-                comms.SD_o.write(bme.getSeaLevelPressure())
-            else:
-                comms.SD_o.write(
-                    "Invalid command in Packet: {}".format(in_packet.to_json()))
-
-        else:
-            comms.SD_o.write(
-                "Packet not a command: {}".format(in_packet.to_json()))
 
 if __name__ == '__main__':
     main()
