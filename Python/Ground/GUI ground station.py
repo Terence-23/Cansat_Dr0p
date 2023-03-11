@@ -64,7 +64,7 @@ class RadioAppWindow:
     def update(self):
         while len(packet_queue):
             packet = packet_queue.popleft()
-            comms.SD_o.write(packet.to_json() + 'packet in GUI update')
+            comms.SD_o.write(comms.FL_DEBUG, packet.to_json() + 'packet in GUI update')
             # Update the liststore with the data from the packet
             self.liststore.append([str(packet.timestamp), str(packet.packet_type), str(packet.payload)])
 
@@ -81,8 +81,8 @@ class RadioAppWindow:
                 print(packet.to_json())
                 
               
-                comms.SD_o.write(f'{time.time() - first_timestamp} time difference')
-                comms.SD_o.write(str(packet) + 'packet')
+                comms.SD_o.write(comms.FL_DEBUG, f'{time.time() - first_timestamp} time difference')
+                comms.SD_o.write(comms.FL_PACKET, str(packet) + 'packet')
                 #comms.SD_o.write(str(packet.payload['temp']) + 'tempval')
                 packet_queue.append(packet)
             except Exception as e:
@@ -110,7 +110,7 @@ class RadioAppWindow:
  
         except ValueError:
             # If the text could not be parsed as a tuple of floats, show an error message and return
-            comms.SD_o.write(traceback.format_exc())
+            comms.SD_o.write(comms.FL_ERROR, traceback.format_exc())
             gps_pos = None
  
     def send_press(self, widget):
@@ -127,7 +127,7 @@ class RadioAppWindow:
             print('sent')
  
         except ValueError:
-            comms.SD_o.write(traceback.format_exc())
+            comms.SD_o.write(comms.FL_ERROR, traceback.format_exc())
             press = None
 
 
