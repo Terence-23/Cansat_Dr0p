@@ -5,7 +5,7 @@ from collections import deque
 sys.path.append('..')
 packet_queue = deque()
 
-from Can.comms import Packet
+from Can.new_Packet import Packet, PacketType, Command
 import Can.comms as comms
 import gi
 import time
@@ -48,9 +48,9 @@ class RadioAppWindow:
         #self.add(self.window)
         self.listener_thread = threading.Thread(target=self.listen_for_radio)
         self.listener_thread.start()
-        self.send_button.connect("clicked", self.send_GPS_Pos)
+        # self.send_button.connect("clicked", self.send_GPS_Pos)
         self.GPSPos_in.connect('activate', self.send_GPS_Pos)
-        self.pressure_in.connect('activate', self.send_GPS_Pos)
+        self.pressure_in.connect('activate', self.send_Press)
 
 
     def update(self):
@@ -83,7 +83,6 @@ class RadioAppWindow:
     def send_GPS_Pos(self, widget):
         # Get the text from the text input widget
         gps_pos_text = self.GPSPos_in.get_text()
-        pressure_text = self.pressure_in.get_text()
 
         # Try to parse the text as a tuple of two floats
         try:
@@ -93,18 +92,24 @@ class RadioAppWindow:
             comms.SD_o.write(traceback.format_exc())
             gps_pos = None
         
-        try: 
-            press = float(pressure_text)
-        except ValueError:
-            comms.SD_o.write(traceback.format_exc())
-            press = None
+        
 
         # Create a new Packet object with the parsed GPS position
-        packet = Packet(timestamp=time.ctime(),pressure=press, gps_position=gps_pos)
+        packet = Packet.create_command_packet(time.time(), Command.SLEEP, *gps_pos)
 
         # Send the encoded packet over the radio
         self.radio.send(packet.encode())
         print('sent')
+        
+    def sendPress(self, widget):
+        
+        pressure_text = self.pressure_in.get_text()       
+        try: 
+            press = float(pressure_text)
+            packet = Packet.create_command_packet(time.time(), Command.SLEEP, press)
+            self.radio.send(packet.encode())
+        except ValueError:
+            comms.SD_o.write(traceback.format_exc())
    
 
 

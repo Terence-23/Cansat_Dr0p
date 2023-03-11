@@ -48,7 +48,7 @@ class Packet:
             if packet_type == PacketType.COMMAND:
                 command, *args = payload
                 command = Command(command)
-                if args != ['None']:
+                if args != ['None'] and args[0] != '':
                     args = [float(arg) for arg in args]
                 else:
                     args = None

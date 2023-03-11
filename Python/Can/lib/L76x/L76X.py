@@ -139,7 +139,8 @@ class L76X(object):
                                     if(ord(data[add+z+k+1]) == 46):#.
                                         continue
                                     latitude = (ord(data[add+z+k+1]) - 48) + latitude*10
-                                self.Lat = latitude / 1000000.0
+                                self.Lat = int(latitude / 1000000.0) \
+                                        + (latitude % 1000000)/600000
                             elif(x == 4):
                                 self.Lat_area = data[add+z+1]
                             elif(x == 5):
@@ -153,7 +154,9 @@ class L76X(object):
                                         continue
                                     longitude = (ord(data[add+z+k+1]) - 48) + longitude*10
                                 
-                                self.Lon = longitude / 1000000.0
+                                self.Lon = int(longitude / 1000000.0) \
+                                        + (longitude % 1000000)/600000
+
                             elif(x == 6):
                                 self.Lon_area = data[add+z+1]
                                 return#Completion calculation
