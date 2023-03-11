@@ -4,8 +4,8 @@ import sys
 sys.path.append('..')
 
 import time
-import Can.comms as comms
-from Can.new_Packet import Packet, Command
+import comms as comms
+from new_Packet import Packet, Command
 import traceback
 import random
 
