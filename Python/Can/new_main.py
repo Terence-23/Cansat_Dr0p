@@ -16,13 +16,13 @@ from adafruit_motor import servo
 
 
 class Servo:
-    left = 100
-    neutral = 50
+    left = 20
+    neutral = 65
 
-    right = 0
+    right = 120
 
     def __init__(self, pwm=pwmio.PWMOut(board.D23, frequency=50)) -> None:
-        self.s = servo.Servo(pwm, min_pulse=750, max_pulse=2250)
+        self.s = servo.Servo(pwm, min_pulse=700, max_pulse=2250)
 
     def rotate(self, angle: int):
         self.s.angle = angle
@@ -122,13 +122,16 @@ def get_rotation_difference(current_heading, desired_heading):
         difference += 360
     return difference
 
+isturning = False
 
 def main():
+    global isturning
     # init
     sleeping = False
-    last_rotate = time.time()
+    turn_delay= 1 #seconds
+    last_rotate = time.time() -turn_delay
     e = 10
-    turn_delay= 0.01 #seconds
+ 
     desiredPos = (-90, 0)
     
     comms.SD_o = comms.SD('log.out')
@@ -141,53 +144,64 @@ def main():
 
     hardiron_calibration = calibrate()
     servo = Servo()
+    c_press = bme.getPress()
+    sleep_time = time.monotonic()
+    sleep_delay = 600
+    bme.setSeaLevelPressure(bme.getPress())
 
     while 1:
-        in_text = None #radio.recv(with_ack=True)
-        if not in_text is None:
-            print(in_text)
-            try:
-                in_packet = Packet.decode(in_text)
-                        
-                comms.SD_o.write(comms.FL_PACKET, in_packet.to_json())
-
-                if in_packet.packet_type == PacketType.COMMAND:
-                    command = in_packet.payload['command']
-                    if command == Command.SLEEP:
-                        sleeping = True
-                    elif command == Command.WAKE:
-                        sleeping = False
-                    elif command == Command.SETPOS:
-                        desiredPos = in_packet.payload['args']
-                        comms.SD_o.write(comms.FL_DEBUG, desiredPos)
-                    elif command == Command.SETPRESS:
-                        bme.setSeaLevelPressure(in_packet.payload['args'][0])
-                        comms.SD_o.write(comms.FL_DEBUG, bme.getSeaLevelPressure())
-                    else:
-                        comms.SD_o.write(comms.FL_ERROR, 
-                            "Invalid command in Packet: {}".format(in_packet.to_json()))
-                else:
-                    comms.SD_o.write(comms.FL_ERROR, 
-                        "Packet not a command: {}".format(in_packet.to_json()))
-                
-            except KeyboardInterrupt as e:
-                raise e
-            
-            except Exception as e:
-                comms.SD_o.write(comms.FL_ERROR, traceback.format_exc())
-                traceback.print_exc()                
-            
-                
-        else: 
-            comms.SD_o.write(comms.FL_PACKET, 'no Packet recieved')    
-        
         packet_b = Packet.create_base_packet(
             time.time(), bme.getTemp(), bme.getPress(), bme.getHum(), bme.getAltitude())
 
         comms.SD_o.write(comms.FL_PACKET, packet_b.to_json())
+        print(packet_b.to_json())
         radio.send(packet_b.encode())
+        
+        if sleeping:
+            in_text = radio.recv(with_ack=True)
+            if not in_text is None:
+                print(in_text)
+                try:
+                    in_packet = Packet.decode(in_text)
+                            
+                    comms.SD_o.write(comms.FL_PACKET, in_packet.to_json())
 
-        if not sleeping:
+                    if in_packet.packet_type == PacketType.COMMAND:
+                        command = in_packet.payload['command']
+                        if command == Command.SLEEP:
+                            sleeping = True
+                        elif command == Command.WAKE:
+                            sleeping = False
+                            c_press = bme.getPress()
+                            sleep_time = time.monotonic()
+                        elif command == Command.SETPOS:
+                            desiredPos = in_packet.payload['args']
+                            comms.SD_o.write(comms.FL_DEBUG, desiredPos)
+                        elif command == Command.SETPRESS:
+                            bme.setSeaLevelPressure(in_packet.payload['args'][0])
+                            comms.SD_o.write(comms.FL_DEBUG, bme.getSeaLevelPressure())
+                        else:
+                            comms.SD_o.write(comms.FL_ERROR, 
+                                "Invalid command in Packet: {}".format(in_packet.to_json()))
+                    else:
+                        comms.SD_o.write(comms.FL_ERROR, 
+                            "Packet not a command: {}".format(in_packet.to_json()))
+                    
+                except KeyboardInterrupt as e:
+                    raise e
+                
+                except Exception as e:
+                    comms.SD_o.write(comms.FL_ERROR, traceback.format_exc())
+                    traceback.print_exc()                
+                
+            else: 
+                comms.SD_o.write(comms.FL_PACKET, 'no Packet recieved')    
+        else:
+            if not c_press + 1 > bme.getPress() > c_press - 1:
+                c_press = bme.getPress()
+                sleep_time = time.monotonic()
+            elif time.monotonic() > sleep_time + sleep_delay:
+                sleeping = True
 
             gps.refresh()
 
@@ -201,9 +215,11 @@ def main():
 
             pitch, roll = calculate_angles(*lsm.getAcceleration())
             #
-            if time.time() < last_rotate + turn_delay:
+            print(f"isturning: {isturning}")
+            if isturning:
                 continue
-
+            isturning = True
+            print("Turning")
             last_rotate = time.time()
 
             mag_corected = normalize(np.array(lsm.getMagnetic()), hardiron_calibration)
@@ -215,8 +231,11 @@ def main():
 
 
             if rotation_to_do < -e:
+                print(isturning)
                 # go Left
                 def repeat_function():
+                    global isturning
+                    print(isturning)
                     # replace function with function to rotate servo by 45 degrees
                     print('go left')
                     servo.rotate(servo.left) 
@@ -224,18 +243,21 @@ def main():
                     #des_rotation = get_rotation((gps.getLat(), gps.getLon()), desiredPos)
                     while get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
                         hardiron_calibration)),rotation) < -e and time.time() < start + turn_delay:
-                        pass
                         # Add a delay if necessary
+                        print(get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
+                        hardiron_calibration)),rotation))
                         time.sleep(0.020)
                     
                     if not get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
                         hardiron_calibration)),rotation) < -e :        
                         servo.rotate(servo.neutral)
                         print("neutral left")
+                    isturning = False
 
             elif rotation_to_do > e:
                 # go Right
                 def repeat_function():
+                    global isturning
                     # replace function with function to rotate servo by 45 degrees
                     print(servo.right)
                     servo.rotate(servo.right)
@@ -247,19 +269,25 @@ def main():
                     while get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
                         hardiron_calibration)),rotation) > e and time.time() < \
                         start + turn_delay:
-                        pass
+                        print(get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
+                            hardiron_calibration)),rotation))
                         # Add a delay if necessary
                         time.sleep(0.020)
+
                     if not get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
                         hardiron_calibration)),rotation) > e:
                         servo.rotate(servo.neutral)
                         print("neutral right")
+                    isturning = False
 
             else:
                 def repeat_function():
+                    global isturning
+                    print('neutral')
                     servo.rotate(servo.neutral)
-
-            threading.Thread(target=repeat_function()).start()
+                    isturning = False
+                    
+            repeat_function()
             
 
 
