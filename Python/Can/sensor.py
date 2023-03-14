@@ -48,6 +48,7 @@ class LSM303:
     def __init__(self, i2c=board.I2C()) ->None:
         self.accel = adafruit_lsm303_accel.LSM303_Accel(i2c)
         self.mag = adafruit_lis2mdl.LIS2MDL(i2c)
+        self.mag.data_rate = 2
     def getAcceleration(self) -> Tuple[float, float, float]:
         return self.accel.acceleration
 
@@ -65,7 +66,7 @@ class L76x:
         x.L76X_Send_Command(x.SET_NMEA_BAUDRATE_115200)
         time.sleep(2)
         x.L76X_Set_Baudrate(115200)
-        x.L76X_Send_Command(x.SET_POS_FIX_400MS)
+        x.L76X_Send_Command(x.SET_POS_FIX_1S)
         #Set output message
         x.L76X_Send_Command(x.SET_NMEA_OUTPUT)
         x.L76X_Exit_BackupMode()

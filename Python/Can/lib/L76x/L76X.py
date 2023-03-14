@@ -67,7 +67,7 @@ class L76X(object):
     SET_REDUCTION               = '$PMTK314,-1'
 
     #Set NMEA sentence output frequencies 
-    SET_NMEA_OUTPUT = '$PMTK314,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,0'
+    SET_NMEA_OUTPUT = '$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0'
     #Baud rate
     SET_NMEA_BAUDRATE          = '$PMTK251'
     SET_NMEA_BAUDRATE_115200   = '$PMTK251,115200'

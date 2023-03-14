@@ -17,7 +17,8 @@ from adafruit_motor import servo
 
 class Servo:
     left = 100
-    neutral = 45
+    neutral = 50
+
     right = 0
 
     def __init__(self, pwm=pwmio.PWMOut(board.D23, frequency=50)) -> None:
@@ -127,7 +128,8 @@ def main():
     sleeping = False
     last_rotate = time.time()
     e = 10
-    desiredPos = (90, 0)
+    turn_delay= 0.01 #seconds
+    desiredPos = (-90, 0)
     
     comms.SD_o = comms.SD('log.out')
     sensor.SD_o = comms.SD_o
@@ -141,7 +143,7 @@ def main():
     servo = Servo()
 
     while 1:
-        in_text = radio.recv(with_ack=True)
+        in_text = None #radio.recv(with_ack=True)
         if not in_text is None:
             print(in_text)
             try:
@@ -177,7 +179,7 @@ def main():
             
                 
         else: 
-            comms.SD_o.write(comms.FL_ERROR, 'no Packet recieved')    
+            comms.SD_o.write(comms.FL_PACKET, 'no Packet recieved')    
         
         packet_b = Packet.create_base_packet(
             time.time(), bme.getTemp(), bme.getPress(), bme.getHum(), bme.getAltitude())
@@ -199,7 +201,7 @@ def main():
 
             pitch, roll = calculate_angles(*lsm.getAcceleration())
             #
-            if time.time() < last_rotate + 2.1:
+            if time.time() < last_rotate + turn_delay:
                 continue
 
             last_rotate = time.time()
@@ -209,7 +211,7 @@ def main():
             rotation = get_rotation((gps.getLat(), gps.getLon()), desiredPos)
             rotation_to_do = get_rotation_difference(compass, rotation)
             
-            print(f"compass: {compass}, rotation: {rotation}, rotation_to_do: {rotation_to_do}")
+            print(f"compass: {compass}, rotation: {rotation}, get_rotation_difference: {rotation_to_do}")
 
 
             if rotation_to_do < -e:
@@ -217,38 +219,47 @@ def main():
                 def repeat_function():
                     # replace function with function to rotate servo by 45 degrees
                     print('go left')
-                    servo.rotate(servo.left)
+                    servo.rotate(servo.left) 
                     start = time.time()
-                    des_rotation = get_rotation(
-                        (gps.getLat(), gps.getLon()), desiredPos)
-                    while compass_reading(*rotate_vector(pitch, roll, lsm.getMagnetic())) < \
-                            des_rotation - e and time.time() < start + 2:
+                    #des_rotation = get_rotation((gps.getLat(), gps.getLon()), desiredPos)
+                    while get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
+                        hardiron_calibration)),rotation) < -e and time.time() < start + turn_delay:
                         pass
                         # Add a delay if necessary
                         time.sleep(0.020)
-                    servo.rotate(servo.neutral)
+                    
+                    if not get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
+                        hardiron_calibration)),rotation) < -e :        
+                        servo.rotate(servo.neutral)
+                        print("neutral left")
 
             elif rotation_to_do > e:
                 # go Right
                 def repeat_function():
                     # replace function with function to rotate servo by 45 degrees
+                    print(servo.right)
                     servo.rotate(servo.right)
+
                     print('go right')
                     start = time.time()
-                    des_rotation = get_rotation(
-                        (gps.getLat(), gps.getLon()), desiredPos)
-                    while compass_reading(*rotate_vector(pitch, roll, lsm.getMagnetic())) > \
-                            des_rotation + e and time.time() < start + 2:
+                    #des_rotation = get_rotation(
+                    #    (gps.getLat(), gps.getLon()), desiredPos)
+                    while get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
+                        hardiron_calibration)),rotation) > e and time.time() < \
+                        start + turn_delay:
                         pass
                         # Add a delay if necessary
                         time.sleep(0.020)
-                    servo.rotate(servo.neutral)
+                    if not get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
+                        hardiron_calibration)),rotation) > e:
+                        servo.rotate(servo.neutral)
+                        print("neutral right")
 
             else:
                 def repeat_function():
-                    pass
+                    servo.rotate(servo.neutral)
 
-            threading.Thread(target=repeat_function())
+            threading.Thread(target=repeat_function()).start()
             
 
 
