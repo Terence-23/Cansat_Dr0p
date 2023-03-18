@@ -84,10 +84,13 @@ class L76x:
         self.refresh()
 
 
-    def refresh(self):
+    def refresh(self, lat = Value('d', 0), lon = Value('d', 0), fix = Value('i', 0)):
         try:
             self.gps.L76X_Gat_GNRMC()
             self.l_rf_time= time.time()*1000
+            lat.value = gps.Lat
+            lon.value = gps.Lon
+            fix.value = gps.Status
 
         except KeyboardInterrupt as e:
             raise e

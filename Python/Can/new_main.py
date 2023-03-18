@@ -13,6 +13,7 @@ import pwmio
 import math
 import traceback
 from adafruit_motor import servo
+from multiprocessing import Process, Value
 
 
 class Servo:
@@ -122,6 +123,11 @@ def get_rotation_difference(current_heading, desired_heading):
         difference += 360
     return difference
 
+def gps_refresh(lat, lon, gpsFix):
+    gps = sensor.L76x()
+    while True:
+        gps.refresh(lat,lon,gpsFix)
+
 isturning = False
 
 def main():
@@ -132,14 +138,19 @@ def main():
     last_rotate = time.time() -turn_delay
     e = 10
  
-    desiredPos = (-90, 0)
-    
     comms.SD_o = comms.SD('log.out')
     sensor.SD_o = comms.SD_o
-    
+ 
+    lat = Value('d', 0.0)
+    lon = Value('d', 0.0)
+    gpsFix = Value('i', 0)
+
+    Process(target=gps_refresh(), args=(lat, lon, gpsFix,))
+
+    desiredPos = (-90, 0)
+   
     lsm = sensor.LSM303()
     bme = sensor.BME(i2c=board.I2C())
-    gps = sensor.L76x()
     radio = comms.Radio(comms.CS, comms.RESET, comms.PWR, comms.FREQ)
 
     hardiron_calibration = calibrate()
@@ -203,12 +214,10 @@ def main():
             elif time.monotonic() > sleep_time + sleep_delay:
                 sleeping = True
 
-            gps.refresh()
+            print(gpsFix())
 
-            print(gps.hasFix())
-
-            packet_e = Packet.create_extended_packet(time.time(), gps.getLat(
-            ), gps.getLon(), *lsm.getAcceleration(), *lsm.getMagnetic())
+            packet_e = Packet.create_extended_packet(time.time(), lat(
+            ), lon, *lsm.getAcceleration(), *lsm.getMagnetic())
 
             radio.send(packet_e.encode())
             comms.SD_o.write(comms.FL_PACKET, packet_e.to_json())
@@ -224,7 +233,7 @@ def main():
 
             mag_corected = normalize(np.array(lsm.getMagnetic()), hardiron_calibration)
             compass = compass_reading(*mag_corected)
-            rotation = get_rotation((gps.getLat(), gps.getLon()), desiredPos)
+            rotation = get_rotation((lat, lon), desiredPos)
             rotation_to_do = get_rotation_difference(compass, rotation)
             
             print(f"compass: {compass}, rotation: {rotation}, get_rotation_difference: {rotation_to_do}")
@@ -240,7 +249,7 @@ def main():
                     print('go left')
                     servo.rotate(servo.left) 
                     start = time.time()
-                    #des_rotation = get_rotation((gps.getLat(), gps.getLon()), desiredPos)
+                    #des_rotation = get_rotation((lat, lon), desiredPos)
                     while get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
                         hardiron_calibration)),rotation) < -e and time.time() < start + turn_delay:
                         # Add a delay if necessary
@@ -265,7 +274,7 @@ def main():
                     print('go right')
                     start = time.time()
                     #des_rotation = get_rotation(
-                    #    (gps.getLat(), gps.getLon()), desiredPos)
+                    #    (lat, lon), desiredPos)
                     while get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
                         hardiron_calibration)),rotation) > e and time.time() < \
                         start + turn_delay:
