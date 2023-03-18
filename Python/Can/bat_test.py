@@ -13,7 +13,6 @@ import pwmio
 import math
 import traceback
 from adafruit_motor import servo
-from multiprocessing import Process, Value
 
 
 class Servo:
@@ -123,34 +122,24 @@ def get_rotation_difference(current_heading, desired_heading):
         difference += 360
     return difference
 
-def gps_refresh(lat, lon, gpsFix):
-    gps = sensor.L76x()
-    while True:
-        gps.refresh(lat,lon,gpsFix)
-
 isturning = False
 
 def main():
     global isturning
     # init
-    sleeping = True 
+    sleeping = False 
     turn_delay= 1 #seconds
     last_rotate = time.time() -turn_delay
     e = 10
  
+    desiredPos = (-90, 0)
+    
     comms.SD_o = comms.SD('log.out')
     sensor.SD_o = comms.SD_o
- 
-    lat = Value('d', 0.0)
-    lon = Value('d', 0.0)
-    gpsFix = Value('i', 0)
-
-    Process(target=gps_refresh(), args=(lat, lon, gpsFix,))
-
-    desiredPos = (-90, 0)
-   
+    
     lsm = sensor.LSM303()
     bme = sensor.BME(i2c=board.I2C())
+    gps = sensor.L76x()
     radio = comms.Radio(comms.CS, comms.RESET, comms.PWR, comms.FREQ)
 
     hardiron_calibration = calibrate()
@@ -210,15 +199,12 @@ def main():
             else: 
                 comms.SD_o.write(comms.FL_PACKET, 'no Packet recieved')    
         else:
-            if not c_press + 1 > bme.getPress() > c_press + 1:
-                c_press = bme.getPress()
-                sleep_time = time.monotonic()
-            elif time.monotonic() > sleep_time + sleep_delay:
-                sleeping = True
 
-            print(gpsFix())
+            gps.refresh()
 
-           packet_e = Packet.create_extended_packet(math.floor(time.time()), gps.getLat(), gps.getLon(), *lsm.getAcceleration(), *lsm.getMagnetic())
+            print(gps.hasFix())
+
+            packet_e = Packet.create_extended_packet(math.floor(time.time()), gps.getLat(), gps.getLon(), *lsm.getAcceleration(), *lsm.getMagnetic())
 
             radio.send(packet_e.encode())
             print(packet_e.to_json())
@@ -235,70 +221,14 @@ def main():
 
             mag_corected = normalize(np.array(lsm.getMagnetic()), hardiron_calibration)
             compass = compass_reading(*mag_corected)
-            rotation = get_rotation((lat, lon), desiredPos)
+            rotation = get_rotation((gps.getLat(), gps.getLon()), desiredPos)
             rotation_to_do = get_rotation_difference(compass, rotation)
             
             print(f"compass: {compass}, rotation: {rotation}, get_rotation_difference: {rotation_to_do}")
 
-
-            if rotation_to_do < -e:
-                print(isturning)
-                # go Left
-                def repeat_function():
-                    global isturning
-                    print(isturning)
-                    # replace function with function to rotate servo by 45 degrees
-                    print('go left')
-                    servo.rotate(servo.left) 
-                    start = time.time()
-                    #des_rotation = get_rotation((lat, lon), desiredPos)
-                    while get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
-                        hardiron_calibration)),rotation) < -e and time.time() < start + turn_delay:
-                        # Add a delay if necessary
-                        # print(get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), hardiron_calibration)),rotation))
-                        time.sleep(0.020)
-                    
-                    if not get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
-                        hardiron_calibration)),rotation) < -e :        
-                        servo.rotate(servo.neutral)
-                        print("neutral left")
-                    isturning = False
-
-            elif rotation_to_do > e:
-                # go Right
-                def repeat_function():
-                    global isturning
-                    # replace function with function to rotate servo by 45 degrees
-                    print(servo.right)
-                    servo.rotate(servo.right)
-
-                    print('go right')
-                    start = time.time()
-                    #des_rotation = get_rotation(
-                    #    (lat, lon), desiredPos)
-                    while get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
-                        hardiron_calibration)),rotation) > e and time.time() < \
-                        start + turn_delay:
-                        # print(get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), hardiron_calibration)),rotation))
-                        # Add a delay if necessary
-                        time.sleep(0.020)
-
-                    if not get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
-                        hardiron_calibration)),rotation) > e:
-                        servo.rotate(servo.neutral)
-                        print("neutral right")
-                    isturning = False
-
-            else:
-                def repeat_function():
-                    global isturning
-                    print('neutral')
-                    servo.rotate(servo.neutral)
-                    isturning = False
-                    
-            repeat_function()
-            
-
+            servo.rotate(servo.right)
+            time.sleep(.5)
+            servo.rotate(servo.left)
 
 if __name__ == '__main__':
     main()
