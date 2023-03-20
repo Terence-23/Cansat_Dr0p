@@ -218,11 +218,14 @@ def main():
             else: 
                 comms.SD_o.write(comms.FL_PACKET, 'no Packet recieved')    
         else:
-            if not c_press + 1 > bme.getPress() > c_press + 1:
+            print(c_press, not (c_press + 1 > bme.getPress() > c_press - 1), bme.getPress(), sep=' ')
+            if not c_press + 2 > bme.getPress() > c_press - 2:
                 c_press = bme.getPress()
                 sleep_time = time.monotonic()
+                # raise Exception('delay')
             elif time.monotonic() > sleep_time + sleep_delay:
                 sleeping = True
+                # raise Exception('sleep')
 
             print(gpsFix.value)
 
