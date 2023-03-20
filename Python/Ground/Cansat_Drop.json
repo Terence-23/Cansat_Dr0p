@@ -1,0 +1,192 @@
+{
+    "frameEnd": "*",
+    "frameStart": "$",
+    "groups": [
+        {
+            "datasets": [
+                {
+                    "alarm": 0,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": false,
+                    "led": false,
+                    "log": false,
+                    "max": 0,
+                    "min": 0,
+                    "title": "Latitude",
+                    "units": "°",
+                    "value": "%6",
+                    "widget": "lat"
+                },
+                {
+                    "alarm": 0,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": false,
+                    "led": false,
+                    "log": false,
+                    "max": 0,
+                    "min": 0,
+                    "title": "Longitude",
+                    "units": "°",
+                    "value": "%7",
+                    "widget": "lon"
+                },
+                {
+                    "alarm": 0,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": false,
+                    "led": false,
+                    "log": false,
+                    "max": 0,
+                    "min": 0,
+                    "title": "Altitude",
+                    "units": "m",
+                    "value": "%5",
+                    "widget": "alt"
+                }
+            ],
+            "title": "GPS",
+            "widget": "map"
+        },
+        {
+            "datasets": [
+                {
+                    "alarm": 0,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": false,
+                    "led": false,
+                    "log": false,
+                    "max": 0,
+                    "min": 0,
+                    "title": "temp",
+                    "units": "°C",
+                    "value": "%2",
+                    "widget": ""
+                },
+                {
+                    "alarm": 1100,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": false,
+                    "led": false,
+                    "log": false,
+                    "max": 1100,
+                    "min": 600,
+                    "title": "Pressure",
+                    "units": "hPa",
+                    "value": "%3",
+                    "widget": ""
+                },
+                {
+                    "alarm": 100,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": false,
+                    "led": false,
+                    "log": false,
+                    "max": 100,
+                    "min": 0,
+                    "title": "Humidity",
+                    "units": "%",
+                    "value": "%4",
+                    "widget": ""
+                }
+            ],
+            "title": "Atmospheric Data",
+            "widget": ""
+        },
+        {
+            "datasets": [
+                {
+                    "alarm": 0,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": false,
+                    "led": false,
+                    "log": false,
+                    "max": 0,
+                    "min": 0,
+                    "title": "Z",
+                    "units": "",
+                    "value": "%10",
+                    "widget": ""
+                }
+            ],
+            "title": "Terrible hack",
+            "widget": ""
+        },
+        {
+            "datasets": [
+                {
+                    "alarm": 0,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": false,
+                    "led": false,
+                    "log": false,
+                    "max": 0,
+                    "min": 0,
+                    "title": "Accelerometer X",
+                    "units": "m/s²",
+                    "value": "%8",
+                    "widget": "x"
+                },
+                {
+                    "alarm": 0,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": false,
+                    "led": false,
+                    "log": false,
+                    "max": 0,
+                    "min": 0,
+                    "title": "Accelerometer Y",
+                    "units": "m/s²",
+                    "value": "%9",
+                    "widget": "y"
+                },
+                {
+                    "alarm": 0,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": false,
+                    "led": false,
+                    "log": false,
+                    "max": 0,
+                    "min": 0,
+                    "title": "Accelerometer Z",
+                    "units": "m/s²",
+                    "value": "%10",
+                    "widget": "z"
+                }
+            ],
+            "title": "Accelerometer",
+            "widget": "accelerometer"
+        },
+        {
+            "datasets": [
+                {
+                    "alarm": 360,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 360,
+                    "min": 0,
+                    "title": "Compass reading",
+                    "units": "°",
+                    "value": "%11",
+                    "widget": "compass"
+                }
+            ],
+            "title": "Compass",
+            "widget": ""
+        }
+    ],
+    "separator": ";",
+    "title": "Cansat Drop"
+}

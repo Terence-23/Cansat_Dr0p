@@ -21,7 +21,7 @@ comms.SD_o = comms.SD('log.txt')
 
 class RadioAppWindow:
 
-    radio = comms.Radio(freq=433.25)
+    radio = comms.Radio(freq=433)
 
     def __init__(self):
         #Gtk.Window.__init__(self, title="Radio App")
