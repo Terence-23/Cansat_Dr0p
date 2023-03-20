@@ -94,12 +94,12 @@ class L76X(object):
         print (data)
         
     def L76X_Gat_GNRMC(self):
-        data = self.config.Uart_ReceiveString(BUFFSIZE).decode()
+        data = self.config.Uart_ReceiveLine().decode()
         # save all nmea sentences removing checksum and changing $GN* to $GP*
         with open("gps.nmea", 'a') as f:
-            text = data.split('*')[0]
-            text = text[:2] + "P" + text[3:]
-            f.write(text + '\n')
+            # text = data.split('*')[0]
+            # text = text[:2] + "P" + text[3:]
+            f.write(data + '\n')
 
         print (data)
         print ('\n')

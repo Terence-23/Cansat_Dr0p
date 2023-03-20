@@ -29,6 +29,9 @@ class config(object):
     def Uart_ReceiveByte(ser): 
         return ser.serial.read(1)
 
+    def Uart_ReceiveLine(ser):
+        return ser.serial.readline()
+
     def Uart_ReceiveString(ser, value): 
         data = ser.serial.read(value)
         return data

@@ -17,10 +17,11 @@ from multiprocessing import Process, Value
 
 
 class Servo:
-    left = 120
-    neutral = 65
-
-    right = 20
+    #left = 120
+    left = 80
+    neutral = 60
+    #right = 20
+    right = 40
 
     def __init__(self, pwm=pwmio.PWMOut(board.D23, frequency=50)) -> None:
         self.s = servo.Servo(pwm, min_pulse=700, max_pulse=2250)
@@ -123,9 +124,12 @@ def get_rotation_difference(current_heading, desired_heading):
         difference += 360
     return difference
 
-def gps_refresh(lat, lon, gpsFix):
+def gps_refresh(lat, lon, gpsFix, runCount):
     gps = sensor.L76x()
+    print('after gps init')
+
     while True:
+        runCount.value += 1
         gps.refresh(lat,lon,gpsFix)
 
 isturning = False
@@ -144,14 +148,17 @@ def main():
     lat = Value('d', 0.0)
     lon = Value('d', 0.0)
     gpsFix = Value('i', 0)
+    runCount = Value('i', 0)
 
-    Process(target=gps_refresh(), args=(lat, lon, gpsFix,))
+    p = Process(target=gps_refresh, args=(lat, lon, gpsFix,runCount,))
+    p.start()
 
-    desiredPos = (-90, 0)
+
+    desiredPos = 52.2670574, 20.7505949
    
     lsm = sensor.LSM303()
     bme = sensor.BME(i2c=board.I2C())
-    radio = comms.Radio(comms.CS, comms.RESET, comms.PWR, comms.FREQ)
+    radio = comms.Radio(comms.CS, comms.RESET, comms.PWR, 433)
 
     hardiron_calibration = calibrate()
     servo = Servo()
@@ -163,6 +170,7 @@ def main():
     print('freq', radio.rfm9x.frequency_mhz)
 
     while 1:
+        print(runCount.value)
         packet_b = Packet.create_base_packet(
             time.time(), bme.getTemp(), bme.getPress(), bme.getHum(), bme.getAltitude())
 
@@ -216,15 +224,15 @@ def main():
             elif time.monotonic() > sleep_time + sleep_delay:
                 sleeping = True
 
-            print(gpsFix())
+            print(gpsFix.value)
 
-           packet_e = Packet.create_extended_packet(math.floor(time.time()), gps.getLat(), gps.getLon(), *lsm.getAcceleration(), *lsm.getMagnetic())
+            packet_e = Packet.create_extended_packet(math.floor(time.time()), lat.value, lon.value, *lsm.getAcceleration(), *lsm.getMagnetic())
 
             radio.send(packet_e.encode())
             print(packet_e.to_json())
             comms.SD_o.write(comms.FL_PACKET, packet_e.to_json())
 
-            pitch, roll = calculate_angles(*lsm.getAcceleration())
+            # pitch, roll = calculate_angles(*lsm.getAcceleration())
             #
             print(f"isturning: {isturning}")
             if isturning:
@@ -235,7 +243,7 @@ def main():
 
             mag_corected = normalize(np.array(lsm.getMagnetic()), hardiron_calibration)
             compass = compass_reading(*mag_corected)
-            rotation = get_rotation((lat, lon), desiredPos)
+            rotation = get_rotation((lat.value, lon.value), desiredPos)
             rotation_to_do = get_rotation_difference(compass, rotation)
             
             print(f"compass: {compass}, rotation: {rotation}, get_rotation_difference: {rotation_to_do}")

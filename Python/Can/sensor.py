@@ -1,5 +1,6 @@
 # file for sensor communication
 
+from multiprocessing import Value
 import adafruit_lsm303_accel
 import adafruit_lis2mdl
 import time
@@ -88,9 +89,9 @@ class L76x:
         try:
             self.gps.L76X_Gat_GNRMC()
             self.l_rf_time= time.time()*1000
-            lat.value = gps.Lat
-            lon.value = gps.Lon
-            fix.value = gps.Status
+            lat.value = self.gps.Lat
+            lon.value = self.gps.Lon
+            fix.value = self.gps.Status
 
         except KeyboardInterrupt as e:
             raise e
