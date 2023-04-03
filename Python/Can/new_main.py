@@ -13,7 +13,7 @@ import pwmio
 import math
 import traceback
 from adafruit_motor import servo
-from multiprocessing import Process, Value
+from multiprocessing import Process, Value, Queue
 
 
 class Servo:
@@ -124,6 +124,43 @@ def get_rotation_difference(current_heading, desired_heading):
         difference += 360
     return difference
 
+
+def acceleration_wake(acceleration, accel : sensor.LSM303()):
+    accel = accel.GetAcceleration()
+    return np.sqrt(accel[0] ** 2 + accel[1] ** 2+ accel[2] ** 2) > acceleration
+        
+
+event_q =  Queue()  
+
+def wake_check(lsm, bme):
+    
+    g = 9.82
+    alt = 50
+    acc = 3*g
+    
+    check_fs = [(acceleration_wake , acc, lsm), (lambda alt, bme: bme.GetAltitude() > alt, height, bme)]
+    
+    for i, *args in check_fs:
+        if i(*args):
+            return True
+    
+    return False
+    
+    
+def wake_checker(lsm, bme, sleeping):
+    
+    while True:
+        time .sleep(0.1)
+        if not sleeping.value and wake_check(lsm, bme):
+            event_q.put(Packet.create_command_packet(time.time(), Commmand.WAKE).encode())
+            
+def radio_recv(radio):
+    while True:
+        text = radio.recv(with_ack=True)
+        if not text is None:
+            event_q.put(text)
+
+
 def gps_refresh(lat, lon, gpsFix, runCount):
     gps = sensor.L76x()
     print('after gps init')
@@ -137,7 +174,7 @@ isturning = False
 def main():
     global isturning
     # init
-    sleeping = True 
+    sleeping = Value('i', 1)
     turn_delay= 1 #seconds
     last_rotate = time.time() -turn_delay
     e = 10
@@ -149,23 +186,28 @@ def main():
     lon = Value('d', 0.0)
     gpsFix = Value('i', 0)
     runCount = Value('i', 0)
-
-    p = Process(target=gps_refresh, args=(lat, lon, gpsFix,runCount,))
-    p.start()
-
-
+    
     desiredPos = 52.2670574, 20.7505949
    
     lsm = sensor.LSM303()
     bme = sensor.BME(i2c=board.I2C())
-    radio = comms.Radio(comms.CS, comms.RESET, comms.PWR, 433)
+    bme.setSeaLevelPressure(bme.getPress())
+    radio = comms.Radio(comms.CS, comms.RESET, comms.PWR, comms.FREQ)
+    
+    gps_p = Process(target=gps_refresh, args=(lat, lon, gpsFix,runCount,))
+    gps_p.start()
+    
+    radio_p = Process(target=radio_recv, args=(radio,))
+    radio_p.start()
+    
+    wake_p = Process(target=wake_checker, args=(lsm, bme,))
+    wake_p.start()
 
     hardiron_calibration = calibrate()
     servo = Servo()
     c_press = bme.getPress()
     sleep_time = time.monotonic()
     sleep_delay = 600
-    bme.setSeaLevelPressure(bme.getPress())
     
     print('freq', radio.rfm9x.frequency_mhz)
 
@@ -178,43 +220,44 @@ def main():
         print(packet_b.to_json())
         radio.send(packet_b.encode())
         
-        if sleeping:
-            in_text = radio.recv(with_ack=True)
-            if not in_text is None:
-                print(in_text)
-                try:
-                    in_packet = Packet.decode(in_text)
-                            
-                    comms.SD_o.write(comms.FL_PACKET, in_packet.to_json())
+        if sleeping.value:
+            while not event_q.empty():
+                in_text = event_q.get(block = False)
+                if not in_text is None:
+                    print(in_text)
+                    try:
+                        in_packet = Packet.decode(in_text)
+                                
+                        comms.SD_o.write(comms.FL_PACKET, in_packet.to_json())
 
-                    if in_packet.packet_type == PacketType.COMMAND:
-                        command = in_packet.payload['command']
-                        if command == Command.SLEEP:
-                            sleeping = True
-                        elif command == Command.WAKE:
-                            sleeping = False
-                            c_press = bme.getPress()
-                            sleep_time = time.monotonic()
-                        elif command == Command.SETPOS:
-                            desiredPos = in_packet.payload['args']
-                            comms.SD_o.write(comms.FL_DEBUG, desiredPos)
-                        elif command == Command.SETPRESS:
-                            bme.setSeaLevelPressure(in_packet.payload['args'][0])
-                            comms.SD_o.write(comms.FL_DEBUG, bme.getSeaLevelPressure())
+                        if in_packet.packet_type == PacketType.COMMAND:
+                            command = in_packet.payload['command']
+                            if command == Command.SLEEP:
+                                sleeping.value = 1
+                            elif command == Command.WAKE:
+                                sleeping.value = 0
+                                c_press = bme.getPress()
+                                sleep_time = time.monotonic()
+                            elif command == Command.SETPOS:
+                                desiredPos = in_packet.payload['args']
+                                comms.SD_o.write(comms.FL_DEBUG, desiredPos)
+                            elif command == Command.SETPRESS:
+                                bme.setSeaLevelPressure(in_packet.payload['args'][0])
+                                comms.SD_o.write(comms.FL_DEBUG, bme.getSeaLevelPressure())
+                            else:
+                                comms.SD_o.write(comms.FL_ERROR, 
+                                    "Invalid command in Packet: {}".format(in_packet.to_json()))
                         else:
                             comms.SD_o.write(comms.FL_ERROR, 
-                                "Invalid command in Packet: {}".format(in_packet.to_json()))
-                    else:
-                        comms.SD_o.write(comms.FL_ERROR, 
-                            "Packet not a command: {}".format(in_packet.to_json()))
+                                "Packet not a command: {}".format(in_packet.to_json()))
+                        
+                    except KeyboardInterrupt as e:
+                        raise e
                     
-                except KeyboardInterrupt as e:
-                    raise e
-                
-                except Exception as e:
-                    comms.SD_o.write(comms.FL_ERROR, traceback.format_exc())
-                    traceback.print_exc()                
-                
+                    except Exception as e:
+                        comms.SD_o.write(comms.FL_ERROR, traceback.format_exc())
+                        traceback.print_exc()                
+                    
             else: 
                 comms.SD_o.write(comms.FL_PACKET, 'no Packet recieved')    
         else:
@@ -224,7 +267,7 @@ def main():
                 sleep_time = time.monotonic()
                 # raise Exception('delay')
             elif time.monotonic() > sleep_time + sleep_delay:
-                sleeping = True
+                sleeping.value = 1
                 # raise Exception('sleep')
 
             print(gpsFix.value)

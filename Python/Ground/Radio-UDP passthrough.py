@@ -27,7 +27,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
 with open('cal_data') as f:
     hardiron_calibration = l_eval(f.readline())
 
-radio = comms.Radio(freq=433)
+radio = comms.Radio(freq=comms.FREQ)
 
 def wait_for_udp():
     sock.bind((UDP_LOCAL_IP, UDP_LOCAL_PORT))
