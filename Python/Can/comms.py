@@ -99,7 +99,7 @@ class Radio:
     def send(self, msg:str):
         self.rfm9x.send_with_ack(bytes(str(msg), "ascii"))
         
-    def recv(self, timeout = 0.5, with_ack=False):
+    def recv(self, timeout = 0.5, with_ack=True):
         packet = self.rfm9x.receive(timeout=timeout, with_ack=with_ack)
         if packet is None:
             print("no packet")
