@@ -32,6 +32,9 @@ class Packet:
         
         return False
     
+    def __str__(self):
+        return self.encode()
+    
     def __init__(self, packet_type, timestamp, payload):
         self.packet_type = packet_type
         self.timestamp = timestamp

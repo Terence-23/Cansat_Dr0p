@@ -97,11 +97,11 @@ class Radio:
         self.rfm9x.tx_power = power
         
     def send(self, msg:str):
-        self.rfm9x.send_with_ack(bytes(str(msg), "ascii"))
+        self.rfm9x.send(bytearray(str(msg), "ascii"))
         
     def recv(self, timeout = 0.5, with_ack=True):
         try:
-            packet = self.rfm9x.receive(timeout=timeout, with_ack=with_ack)
+            packet = self.rfm9x.receive(timeout=timeout, with_ack=False)
             print(self.rfm9x.frequency_mhz)
             print('Packet:', packet)
             if packet is None:
