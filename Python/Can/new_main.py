@@ -234,6 +234,7 @@ def main():
         
         if sleeping.value: 
             while not event_q.empty():
+                print('event_q not empty')
                 in_text = event_q.get(block = False)
                 if not in_text is None:
                     print(in_text)
