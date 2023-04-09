@@ -51,7 +51,7 @@ class Packet:
                 if args != ['None'] and args[0] != '':
                     args = [float(arg) for arg in args]
                 else:
-                    args = None
+                    args = ()
                 payload = {'command': command, 'args': args}
             
             elif packet_type == PacketType.BASE:
@@ -125,7 +125,7 @@ class Packet:
     def create_command_packet(timestamp, command, *args):
         if not type(command) == Command:
             command = Command(command)
-        return Packet(PacketType.COMMAND, timestamp, {'command': command, 'args': args})
+        return Packet(PacketType.COMMAND, timestamp, {'command': command, 'args': list(args)})
 
     @staticmethod
     def create_base_packet(timestamp, temp, pressure, humidity, altitude):
@@ -137,13 +137,16 @@ class Packet:
 
 
 def main():
-    com_packet = Packet.create_command_packet(time.time(), Command.SLEEP)
+    com_packet = Packet.create_command_packet(time.time(), Command.SETPRESS, 50.0)
     base_packet = Packet.create_base_packet(time.time(), 10, 1013, 40, 100)
     ext_packet = Packet.create_extended_packet(time.time(),50, 20, 0, 9.8, 0, 0, 0 ,0)
 
-    assert com_packet.encode() == com_packet
-    assert base_packet.encode() == base_packet
-    assert ext_packet.encode() == ext_packet
+    print(com_packet.to_json())
+    print(Packet.decode(com_packet.encode()).to_json())
+
+    assert Packet.decode(com_packet.encode()) == com_packet
+    assert Packet.decode(base_packet.encode()) == base_packet
+    assert Packet.decode(ext_packet.encode()) == ext_packet
 
     print(base_packet.to_json())
     

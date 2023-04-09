@@ -200,7 +200,7 @@ def main():
     radio_p = Process(target=radio_recv, args=(radio,))
     radio_p.start()
     
-    wake_p = Process(target=wake_checker, args=(lsm, bme,))
+    wake_p = Process(target=wake_checker, args=(lsm, bme, sleeping,))
     wake_p.start()
 
     hardiron_calibration = calibrate()
