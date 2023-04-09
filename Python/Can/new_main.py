@@ -162,6 +162,7 @@ def radio_recv(radio):
                 radio.send(send_q.get(block=False))
             except:
                 pass
+        
         text = radio.recv(with_ack=True)
         if not text is None:
             event_q.put(text)
