@@ -100,15 +100,20 @@ class Radio:
         self.rfm9x.send_with_ack(bytes(str(msg), "ascii"))
         
     def recv(self, timeout = 0.5, with_ack=True):
-        packet = self.rfm9x.receive(timeout=timeout, with_ack=with_ack)
-        if packet is None:
-            print("no packet")
-            return None
-        else:
-            print("packet")
-            SD_o.write(FL_DEBUG, f"RSSI:{self.rfm9x.last_rssi}")
-            return str(packet, 'ascii')
-    
+        try:
+            packet = self.rfm9x.receive(timeout=timeout, with_ack=with_ack)
+            if packet is None:
+                print("no packet")
+                return None
+            else:
+                print("packet")
+                SD_o.write(FL_DEBUG, f"RSSI:{self.rfm9x.last_rssi}")
+                return str(packet, 'ascii')
+        except KeyboardInterrupt as e:
+            raise e
+        except Exception as e:
+            traceback.print_exc()
+            SD_o.write(FL_ERROR, traceback.format_exc())
 
 
 SD_o:SD
