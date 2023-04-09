@@ -140,7 +140,7 @@ def wake_check(lsm, bme):
     alt = 50
     acc = 3*g
     
-    check_fs = [(acceleration_wake , acc, lsm), (lambda alt, bme: bme.GetAltitude() > alt, alt, bme)]
+    check_fs = [(acceleration_wake , acc, lsm), (lambda alt, bme: bme.getAltitude() > alt, alt, bme)]
     
     for i, (v, *args) in enumerate(check_fs):
         print(f"{i} {v.__name__} {args}")
