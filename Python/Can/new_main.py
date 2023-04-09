@@ -144,7 +144,7 @@ def wake_check(lsm, bme):
     
     for i, (v, *args) in enumerate(check_fs):
         print(f"{i} {v.__name__} {args}")
-        print(v(tuple(args)))
+        print(v(*args))
     
         if v(*args):
             print('wake')
