@@ -138,7 +138,7 @@ def wake_check(lsm, bme):
     alt = 50
     acc = 3*g
     
-    check_fs = [(acceleration_wake , acc, lsm), (lambda alt, bme: bme.GetAltitude() > alt, height, bme)]
+    check_fs = [(acceleration_wake , acc, lsm), (lambda alt, bme: bme.GetAltitude() > alt, alt, bme)]
     
     for i, *args in check_fs:
         if i(*args):
@@ -152,7 +152,7 @@ def wake_checker(lsm, bme, sleeping):
     while True:
         time .sleep(0.1)
         if not sleeping.value and wake_check(lsm, bme):
-            event_q.put(Packet.create_command_packet(time.time(), Commmand.WAKE).encode())
+            event_q.put(Packet.create_command_packet(time.time(), Command.WAKE).encode())
             
 def radio_recv(radio):
     while True:
@@ -220,7 +220,7 @@ def main():
         print(packet_b.to_json())
         radio.send(packet_b.encode())
         
-        if sleeping.value:
+        if sleeping.value: 
             while not event_q.empty():
                 in_text = event_q.get(block = False)
                 if not in_text is None:
