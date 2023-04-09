@@ -135,6 +135,7 @@ send_q = Queue()
 
 def wake_check(lsm, bme):
     
+    print('wake check')
     g = 9.82
     alt = 50
     acc = 3*g
@@ -156,7 +157,7 @@ def wake_checker(lsm, bme, sleeping):
     while True:
         time .sleep(0.1)
         print(sleeping.value ,'sleeping')
-        if not sleeping.value and wake_check(lsm, bme):
+        if sleeping.value and wake_check(lsm, bme):
             event_q.put(Packet.create_command_packet(time.time(), Command.WAKE).encode())
             
 def radio_recv(radio):
