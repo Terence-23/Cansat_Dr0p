@@ -155,7 +155,7 @@ def wake_checker(lsm, bme, sleeping):
     print('start wake checker')
     while True:
         time .sleep(0.1)
-        print(sleeping.value)
+        print(sleeping.value ,'sleeping')
         if not sleeping.value and wake_check(lsm, bme):
             event_q.put(Packet.create_command_packet(time.time(), Command.WAKE).encode())
             
