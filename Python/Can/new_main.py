@@ -131,6 +131,7 @@ def acceleration_wake(acceleration, accel : sensor.LSM303()):
         
 
 event_q =  Queue()  
+send_q = Queue()
 
 def wake_check(lsm, bme):
     
@@ -156,6 +157,11 @@ def wake_checker(lsm, bme, sleeping):
             
 def radio_recv(radio):
     while True:
+        while not send_q.empty():
+            try: 
+                radio.send(send_q.get(block=False))
+            except:
+                pass
         text = radio.recv(with_ack=True)
         if not text is None:
             event_q.put(text)
@@ -218,7 +224,10 @@ def main():
 
         comms.SD_o.write(comms.FL_PACKET, packet_b.to_json())
         print(packet_b.to_json())
-        radio.send(packet_b.encode())
+        try:
+            send_q.put_nowait(packet_b.encode())
+        except:
+            comms.SD_o.write(comms.FL_ERROR, 'send queue is full')
         
         if sleeping.value: 
             while not event_q.empty():
@@ -274,7 +283,10 @@ def main():
 
             packet_e = Packet.create_extended_packet(math.floor(time.time()), lat.value, lon.value, *lsm.getAcceleration(), *lsm.getMagnetic())
 
-            radio.send(packet_e.encode())
+            try:
+                send_q.put_nowait(packet_e.encode())
+            except:
+                comms.SD_o.write(comms.FL_ERROR, 'send queue is full')
             print(packet_e.to_json())
             comms.SD_o.write(comms.FL_PACKET, packet_e.to_json())
 

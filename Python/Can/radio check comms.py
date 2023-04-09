@@ -31,7 +31,6 @@ try:
         else:
             diff +=1
 except:
-    pass
     traceback.print_exc()
 finally:
     print(f'Same:{same}, Different:{diff}, Ratio:{same/diff}')
