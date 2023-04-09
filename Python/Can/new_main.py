@@ -232,7 +232,8 @@ def main():
         except:
             comms.SD_o.write(comms.FL_ERROR, 'send queue is full')
         
-        if sleeping.value: 
+        if sleeping.value == 1: 
+            print ('sleeping')
             while not event_q.empty():
                 print('event_q not empty')
                 in_text = event_q.get(block = False)
@@ -273,6 +274,7 @@ def main():
                     
             else: 
                 comms.SD_o.write(comms.FL_PACKET, 'no Packet recieved')    
+            time.sleep(0.5)
         else:
             print(c_press, not (c_press + 1 > bme.getPress() > c_press - 1), bme.getPress(), sep=' ')
             if not c_press + 2 > bme.getPress() > c_press - 2:
