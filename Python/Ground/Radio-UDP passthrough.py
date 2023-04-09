@@ -47,10 +47,13 @@ def wait_for_udp():
             msg = Packet.create_command_packet(time.time(), Command.WAKE).encode()
             radio.send(msg)
             time.sleep(0.3)
+            radio.send(msg)
             print(msg)
         elif type.upper() == "PRESS":
             try:
                 msg = Packet.create_command_packet(time.time(), Command.SETPRESS, float(args[0])).encode()
+                radio.send(msg)
+                time.sleep(0.3)
                 radio.send(msg)
                 print(msg)
             except Exception as e:
@@ -58,6 +61,8 @@ def wait_for_udp():
         elif type.upper() == "POS":
             try:
                 msg = Packet.create_command_packet(time.time(), Command.SETPRESS, float(args[0]), float(args[1])).encode()
+                radio.send(msg)
+                time.sleep(0.3)
                 radio.send(msg)
                 print(msg)
             except Exception as e:
