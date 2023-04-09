@@ -143,8 +143,10 @@ def wake_check(lsm, bme):
     
     for i, *args in check_fs:
         if i(*args):
+            print('wake')
             return True
     
+    print('sleep')
     return False
     
     
