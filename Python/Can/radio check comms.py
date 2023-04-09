@@ -21,7 +21,7 @@ try:
         radio.send(packet)
         
         echod = radio.receive()
-        print(packet)
+        print('\n', packet)
         print(echod)
         
         if echod is None:
