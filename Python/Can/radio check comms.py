@@ -17,7 +17,7 @@ diff = 0
 try:
     while True:
         data = 1    
-        packet = bytearray(Packet.create_base_packet(time.time(), 20, 1013, 30, 0),'ascii')
+        packet = bytearray(str(Packet.create_base_packet(time.time(), 20, 1013, 30, 0)),'ascii')
         radio.send(packet)
         
         echod = radio.receive()

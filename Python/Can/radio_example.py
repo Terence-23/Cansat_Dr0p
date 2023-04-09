@@ -23,7 +23,7 @@ rfm9x.tx_power = 20
 
 while True:
   try:
-    rfm9x.send(bytes(str(Packet.create_base_packet(time.time(), 30, 1013,40,0)), "ascii"))
+    rfm9x.send(bytearray(str(Packet.create_base_packet(time.time(), 30, 1013,40,0)), "ascii"))
     print("Sent Hello World message!")
 
     print("Waiting for packets...")
