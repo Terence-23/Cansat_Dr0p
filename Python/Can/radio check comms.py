@@ -1,6 +1,6 @@
 import adafruit_rfm9x
 import digitalio, busio, board
-import time
+import time, traceback
 from new_Packet import Packet, PacketType, Command
 
 CS = digitalio.DigitalInOut(board.D22)
@@ -32,6 +32,7 @@ try:
             diff +=1
 except:
     pass
+    traceback.print_exc()
 finally:
     print(f'Same:{same}, Different:{diff}, Ratio:{same/diff}')
     
