@@ -1,6 +1,7 @@
 import adafruit_rfm9x
 import digitalio, busio, board
 import time
+from new_Packet import Packet, PacketType, Command
 
 CS = digitalio.DigitalInOut(board.D22)
 RESET = digitalio.DigitalInOut(board.D27)
@@ -16,7 +17,7 @@ diff = 0
 try:
     while True:
         data = 1    
-        packet = bytearray(f'{time.time()};{data}', 'ascii')
+        packet = bytearray(Packet.create_base_packet(time.time(), 20, 1013, 30, 0),'ascii')
         radio.send(packet)
         
         echod = radio.receive()
