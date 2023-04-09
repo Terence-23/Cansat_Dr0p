@@ -126,7 +126,7 @@ def get_rotation_difference(current_heading, desired_heading):
 
 
 def acceleration_wake(acceleration, accel : sensor.LSM303()):
-    accel = accel.GetAcceleration()
+    accel = accel.getAcceleration()
     return np.sqrt(accel[0] ** 2 + accel[1] ** 2+ accel[2] ** 2) > acceleration
         
 
