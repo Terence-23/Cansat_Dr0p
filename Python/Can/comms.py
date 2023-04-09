@@ -102,12 +102,14 @@ class Radio:
     def recv(self, timeout = 0.5, with_ack=True):
         try:
             packet = self.rfm9x.receive(timeout=timeout, with_ack=with_ack)
+            print(self.rfm9x.frequency_mhz)
+            print('Packet:', packet)
             if packet is None:
                 print("no packet")
                 return None
             else:
                 print("packet")
-                SD_o.write(FL_DEBUG, f"RSSI:{self.rfm9x.last_rssi}")
+                # SD_o.write(FL_DEBUG, f"RSSI:{self.rfm9x.last_rssi}")
                 return str(packet, 'ascii')
         except KeyboardInterrupt as e:
             raise e
