@@ -227,6 +227,7 @@ def main():
 
     while 1:
         print(runCount.value)
+        #send basic packet
         packet_b = Packet.create_base_packet(
             time.time(), bme.getTemp(), bme.getPress(), bme.getHum(), bme.getAltitude())
 
@@ -237,51 +238,54 @@ def main():
         except:
             comms.SD_o.write(comms.FL_ERROR, 'send queue is full')
         
-        if sleeping.value == 1: 
-            print ('sleeping')
-            while not event_q.empty():
-                print('event_q not empty')
-                in_text = event_q.get(block = False)
-                if not in_text is None:
-                    print(in_text)
-                    try:
-                        in_packet = Packet.decode(in_text)
-                                
-                        comms.SD_o.write(comms.FL_PACKET, in_packet.to_json())
-
-                        if in_packet.packet_type == PacketType.COMMAND:
-                            command = in_packet.payload['command']
-                            if command == Command.SLEEP:
-                                sleeping.value = 1
-                            elif command == Command.WAKE:
-                                sleeping.value = 0
-                                c_press = bme.getPress()
-                                sleep_time = time.monotonic()
-                            elif command == Command.SETPOS:
-                                desiredPos = in_packet.payload['args']
-                                comms.SD_o.write(comms.FL_DEBUG, desiredPos)
-                            elif command == Command.SETPRESS:
-                                bme.setSeaLevelPressure(in_packet.payload['args'][0])
-                                comms.SD_o.write(comms.FL_DEBUG, bme.getSeaLevelPressure())
-                            else:
-                                comms.SD_o.write(comms.FL_ERROR, 
-                                    "Invalid command in Packet: {}".format(in_packet.to_json()))
+        #deal with all incoming packets
+        while not event_q.empty():
+            print('event_q not empty')
+            in_text = event_q.get(block = False)
+            if not in_text is None:
+                print(in_text)
+                try:
+                    in_packet = Packet.decode(in_text)     
+                    comms.SD_o.write(comms.FL_PACKET, in_packet.to_json())
+                    if in_packet.packet_type == PacketType.COMMAND:
+                        command = in_packet.payload['command']
+                        if command == Command.SLEEP:
+                            sleeping.value = 1
+                        elif command == Command.WAKE:
+                            sleeping.value = 0
+                            c_press = bme.getPress()
+                            sleep_time = time.monotonic()
+                        elif command == Command.SETPOS:
+                            desiredPos = in_packet.payload['args']
+                            comms.SD_o.write(comms.FL_DEBUG, desiredPos)
+                        elif command == Command.SETPRESS:
+                            bme.setSeaLevelPressure(in_packet.payload['args'][0])
+                            comms.SD_o.write(comms.FL_DEBUG, bme.getSeaLevelPressure())
                         else:
                             comms.SD_o.write(comms.FL_ERROR, 
-                                "Packet not a command: {}".format(in_packet.to_json()))
-                        
-                    except KeyboardInterrupt as e:
-                        raise e
+                                "Invalid command in Packet: {}".format(in_packet.to_json()))
+                    else:
+                        comms.SD_o.write(comms.FL_ERROR, 
+                            "Packet not a command: {}".format(in_packet.to_json()))
                     
-                    except Exception as e:
-                        comms.SD_o.write(comms.FL_ERROR, traceback.format_exc())
-                        traceback.print_exc()                
-                    
+                except KeyboardInterrupt as e:
+                    raise e
+                
+                except Exception as e:
+                    comms.SD_o.write(comms.FL_ERROR, traceback.format_exc())
+                    traceback.print_exc()                
+                
             else: 
-                comms.SD_o.write(comms.FL_PACKET, 'no Packet recieved')    
+                comms.SD_o.write(comms.FL_PACKET, 'no Packet recieved')
+        
+        
+        if sleeping.value == 1: 
+            print ('sleeping')
+                
             time.sleep(0.5)
         else:
             print(c_press, not (c_press + 1 > bme.getPress() > c_press - 1), bme.getPress(), sep=' ')
+            # go to sleep
             if not c_press + 2 > bme.getPress() > c_press - 2:
                 c_press = bme.getPress()
                 sleep_time = time.monotonic()
@@ -291,7 +295,7 @@ def main():
                 # raise Exception('sleep')
 
             print(gpsFix.value)
-
+            #send extended packet
             packet_e = Packet.create_extended_packet(math.floor(time.time()), lat.value, lon.value, *lsm.getAcceleration(), *lsm.getMagnetic())
 
             try:
@@ -302,13 +306,14 @@ def main():
             comms.SD_o.write(comms.FL_PACKET, packet_e.to_json())
 
             # pitch, roll = calculate_angles(*lsm.getAcceleration())
-            #
+            
+            #steer
             print(f"isturning: {isturning}")
             if isturning:
                 continue
             isturning = True
             print("Turning")
-            last_rotate = time.time()
+            # last_rotate = time.time()
 
             mag_corected = normalize(np.array(lsm.getMagnetic()), hardiron_calibration)
             compass = compass_reading(*mag_corected)
