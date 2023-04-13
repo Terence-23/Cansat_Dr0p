@@ -94,7 +94,7 @@ def release_more_data(data):
 # Example Usage
 def main():
     global ax, ani, gdata
-    packets = packet.Packet.read_multiple_from_file('/home/jerzy/Data/Programowanie/Cansat/Python/Ground/sampleData.json')
+    packets = packet.Packet.read_multiple_from_file('/home/p1xel/Documents/CanSat/Cansat/Python/Ground/sampleData.json')
     data = make_points(packets)
     print(data)
     threading.Thread(target=release_more_data, args=(data,)).start()

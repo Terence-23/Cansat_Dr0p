@@ -118,7 +118,7 @@ def radio_recv():
         if in_text is not None:
             try:
                 packet = Packet.decode(in_text)
-                
+                comms.SD_o.write(comms.FL_PACKET, packet.to_json())
                 if packet.packet_type == PacketType.BASE:
                     last_base = packet
                 elif packet.packet_type == PacketType.EXTENDED:
