@@ -145,7 +145,9 @@ def wake_check(lsm, bme):
     for i, (v, *args) in enumerate(check_fs):
         print(f"{i} {v.__name__} {args}")
         print(v(*args))
-    
+        
+        comms.SD_o.write('WAKE', f'{v.__name__}: {v(*args)}')
+        comms.SD_o.write('WAKE', f'{bme.getPress()}')
         if v(*args):
             print('wake')
             return True
@@ -160,7 +162,9 @@ def wake_checker(lsm, bme, sleeping):
         time .sleep(0.1)
         print(sleeping.value ,'sleeping')
         if sleeping.value and wake_check(lsm, bme):
-            event_q.put(Packet.create_command_packet(time.time(), Command.WAKE).encode())
+            comms.SD_o.write(comms.FL_DEBUG, 'auto_wake')
+            packet = Packet.create_command_packet(time.time(), Command.WAKE)
+            event_q.put(packet.encode())
             
 def radio_recv(radio):
     while True:
@@ -217,6 +221,7 @@ def main():
     wake_p = Process(target=wake_checker, args=(lsm, bme, sleeping,))
     wake_p.start()
 
+    time.sleep(0)
     hardiron_calibration = calibrate()
     servo = Servo()
     c_press = bme.getPress()

@@ -20,7 +20,7 @@ class BME:
     sensor:adafruit_bme680.Adafruit_BME680
     def __init__(self, cs = digitalio.DigitalInOut(board.D22), spi = board.SPI(), i2c = None) -> None:
         if i2c != None:
-            self.sensor = adafruit_bme680.Adafruit_BME680_I2C(i2c)
+            self.sensor = adafruit_bme680.Adafruit_BME680_I2C(i2c, refresh_rate=5)
         else:
             self.sensor = adafruit_bme680.Adafruit_BME680_SPI(spi, cs)
 
