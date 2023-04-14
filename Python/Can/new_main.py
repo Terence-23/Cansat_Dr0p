@@ -205,7 +205,7 @@ def main():
     gpsFix = Value('i', 0)
     runCount = Value('i', 0)
     
-    desiredPos = 52.2670574, 20.7505949
+    desiredPos = 50.3369282, 19.5322675 
    
     lsm = sensor.LSM303()
     bme = sensor.BME(i2c=board.I2C())
