@@ -14,9 +14,10 @@ from ast import literal_eval as l_eval
 import threading
 import traceback
 import math
+import ipaddress
 
-UDPIPS = ['192.168.100.28', '192.168.100.101']
-UDP_LOCAL_IP = '192.168.100.138'
+UDPIPS = ['192.168.1.100', '192.168.129.41','192.168.1.110']
+UDP_LOCAL_IP = '192.168.129.133'
 UDP_PORT = 2137
 UDP_LOCAL_PORT = 2138
 
@@ -49,6 +50,11 @@ def wait_for_udp():
             time.sleep(0.3)
             radio.send(msg)
             print(msg)
+        elif type.upper().strip() == "SLEEP":
+            msg = Packet.create_command_packet(time.time(), Command.SLEEP).encode()
+            radio.send(msg)
+            time.sleep(0.3)
+            print(msg)
         elif type.upper() == "PRESS":
             try:
                 msg = Packet.create_command_packet(time.time(), Command.SETPRESS, float(args[0])).encode()
@@ -65,6 +71,13 @@ def wait_for_udp():
                 time.sleep(0.3)
                 radio.send(msg)
                 print(msg)
+            except Exception as e:
+                traceback.print_exc()
+        elif type.upper() == "IP":
+            try:
+                ipaddress.ip_address(args[0])
+                UDPIPS.append(args[0])
+                print(UDPIPS)
             except Exception as e:
                 traceback.print_exc()
         else:
@@ -120,6 +133,7 @@ def radio_recv():
                 packet = Packet.decode(in_text)
                 comms.SD_o.write(comms.FL_PACKET, packet.to_json())
                 if packet.packet_type == PacketType.BASE:
+                    packet.payload['temp'] -= 10
                     last_base = packet
                 elif packet.packet_type == PacketType.EXTENDED:
                     last_ext = packet                    
@@ -127,7 +141,7 @@ def radio_recv():
                 compass = compass_reading(*normalize(
                     (last_ext.payload['magnetometer_x'], last_ext.payload['magnetometer_y'], last_ext.payload['magnetometer_z']) ,hardiron_calibration))
                 
-                studio_frame = f"${last_base.encode()[2:]};{';'.join(last_ext.encode().split(';')[2:-3])};{compass}*\n"
+                studio_frame = f"${last_base.encode()[2:]};{';'.join(last_ext.encode().split(';')[2:-3])};{compass};{radio.rfm9x.last_rssi}*\n"
                 for ip in UDPIPS:
                     sock.sendto(bytes(studio_frame, 'utf-8'),(ip, UDP_PORT))
                 
