@@ -112,17 +112,19 @@ class Packet:
         return packets
         
     @classmethod
-    def from_json(cls, json):
-        if json['packet_type'] == 'c':
+    def from_json(cls, json_str):
+        if isinstance(json_str, str):
+            json_str = json.loads(json_str)
+        if json_str['packet_type'] == 'c':
             ptype = PacketType.COMMAND
-            return cls(packet_type = ptype, timestamp= float(json['timestamp']), payload=json['payload'])
-        elif json['packet_type'] == 'b':
+            return cls(packet_type = ptype, timestamp= float(json_str['timestamp']), payload=json_str['payload'])
+        elif json_str['packet_type'] == 'b':
             ptype = PacketType.BASE
-        elif json['packet_type'] == 'e':
+        elif json_str['packet_type'] == 'e':
             ptype = PacketType.EXTENDED
         else:
             raise ValueError("invalid packet json")
-        return cls(packet_type = ptype, timestamp= float(json['timestamp']), payload={k:float(v) for k, v in json['payload'].items()})
+        return cls(packet_type = ptype, timestamp= float(json_str['timestamp']), payload={k:float(v) for k, v in json_str['payload'].items()})
     
     @staticmethod    
     def create_command_packet(timestamp, command, *args):

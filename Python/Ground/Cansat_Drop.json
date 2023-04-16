@@ -56,7 +56,7 @@
                     "alarm": 0,
                     "fft": false,
                     "fftSamples": 1024,
-                    "graph": false,
+                    "graph": true,
                     "led": false,
                     "log": false,
                     "max": 0,
@@ -70,7 +70,7 @@
                     "alarm": 1100,
                     "fft": false,
                     "fftSamples": 1024,
-                    "graph": false,
+                    "graph": true,
                     "led": false,
                     "log": false,
                     "max": 1100,
@@ -84,7 +84,7 @@
                     "alarm": 100,
                     "fft": false,
                     "fftSamples": 1024,
-                    "graph": false,
+                    "graph": true,
                     "led": false,
                     "log": false,
                     "max": 100,
@@ -184,6 +184,26 @@
                 }
             ],
             "title": "Compass",
+            "widget": ""
+        },
+        {
+            "datasets": [
+                {
+                    "alarm": 0,
+                    "fft": false,
+                    "fftSamples": 1024,
+                    "graph": true,
+                    "led": false,
+                    "log": false,
+                    "max": 0,
+                    "min": -200,
+                    "title": "RSSI",
+                    "units": "dB",
+                    "value": "%12",
+                    "widget": ""
+                }
+            ],
+            "title": "RSSI",
             "widget": ""
         }
     ],
