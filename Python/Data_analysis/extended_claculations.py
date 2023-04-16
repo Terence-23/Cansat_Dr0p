@@ -100,10 +100,10 @@ def calc_all_packets(packets):
         if h_speed == -1000000:
             h_speed = float(post_calc[-1].split(',')[-2])
         
-        post_calc.append(','.join(map(str, packet + [heading, des_heading, h_speed, time.ctime(packet[0])])))
-        
-        prev_packet = packet
-    
+        if prev_packet[0] != packet[0]:
+            post_calc.append(','.join(map(str, packet + [heading, des_heading, h_speed, time.ctime(packet[0])])))
+            
+            prev_packet = packet
     
     post_calc_csv = '\n'.join(post_calc)
     print(post_calc_csv)
