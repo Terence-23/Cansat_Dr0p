@@ -47,6 +47,14 @@ def get_rotation(point1, point2):
 
     return angle
 
+def get_rotation_difference(current_heading, desired_heading):
+    difference = desired_heading - current_heading
+    if difference > 180:
+        difference -= 360
+    elif difference < -180:
+        difference += 360
+    return difference
+
 
 
 def calc_heading(packet, hardiron_calibration):
@@ -67,8 +75,26 @@ def calc_horizontal_speed(packet, prev_packet):
     #meters per second:
     return distance/deltatime
 
-hardiron = np.array(l_eval(open("cal_data").readline()))
-desired_pos = 50.3369282, 19.5322675 
+def calc_turn(packet, hardiron_calibration, desired_pos):
+    mag_corected = normalize(packet[6:9], hardiron_calibration)
+    compass = compass_reading(*mag_corected)
+    rotation = get_rotation(packet[1:3], desired_pos)
+    rotation_to_do = get_rotation_difference(compass, rotation)
+    e = 10
+        
+    if rotation_to_do < -e:
+        # go Left
+        return 1
+    
+    elif rotation_to_do > e:
+        # go Right
+        return -1
+    
+    else:
+        return 0
+    
+# hardiron = np.array(l_eval(open("cal_data").readline()))
+# desired_pos = 50.3369282, 19.5322675 
 
 def read_packets(path):
     with open(path, 'r') as f:
@@ -78,7 +104,7 @@ def calc_all_packets(packets):
     hardiron = np.array(l_eval(open("cal_data").readline()))
     desired_pos = 50.3369282, 19.5322675 
     
-    post_calc = ['timestamp,lat,lon,acc_x,acc_y,acc_z,mag_x,mag_y,mag_z,heading,opt_heading,hor_speed, ctime']
+    post_calc = ['timestamp,lat,lon,acc_x,acc_y,acc_z,mag_x,mag_y,mag_z,heading,opt_heading,hor_speed, ctime, turn_status']
     
     packet = packets[0]
     
@@ -92,16 +118,17 @@ def calc_all_packets(packets):
     prev_packet = packet
     for packet in packets[1:]:   
         #packet independent
-        heading = calc_heading(packet,hardiron)
+        heading = calc_heading(packet, hardiron)
         des_heading = calc_optimal_heading(packet, desired_pos)
+        turn_status = calc_turn(packet, hardiron, desired_pos)
         
         #packet dependent
         h_speed = calc_horizontal_speed(packet, prev_packet)
         if h_speed == -1000000:
-            h_speed = float(post_calc[-1].split(',')[-2])
+            h_speed = float(post_calc[-1].split(',')[11])
         
         if prev_packet[0] != packet[0]:
-            post_calc.append(','.join(map(str, packet + [heading, des_heading, h_speed, time.ctime(packet[0])])))
+            post_calc.append(','.join(map(str, packet + [heading, des_heading, h_speed, time.ctime(packet[0]), turn_status])))
             
             prev_packet = packet
     
