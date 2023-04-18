@@ -36,14 +36,13 @@ def get_rotation(point1, point2):
     dy = y2 - y1
 
     # Calculate the angle from the positive x-axis
-    angle = math.atan2(dx, dy)
+    angle = math.atan2(dy, dx)
 
     # Convert the angle from radians to degrees
     angle = math.degrees(angle)
 
     # Make sure the angle is positive
-    if angle < 0:
-        angle += 360
+    angle = (angle + 360 - 45) % 360
 
     return angle
 
