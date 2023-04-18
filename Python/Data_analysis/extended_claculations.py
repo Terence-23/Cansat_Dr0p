@@ -36,7 +36,7 @@ def get_rotation(point1, point2):
     dy = y2 - y1
 
     # Calculate the angle from the positive x-axis
-    angle = math.atan2(dy, dx)
+    angle = math.atan2(dx, dy)
 
     # Convert the angle from radians to degrees
     angle = math.degrees(angle)

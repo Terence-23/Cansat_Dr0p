@@ -68,17 +68,22 @@ opt_pointer = bpy.data.objects['opt_looking_direction']
 start_rot = can.rotation_euler
 rad90 = math.radians(90)
 can.rotation_euler = start_rot
+sky = bpy.data.worlds["World"].node_tree.nodes["Sky Texture"]
+
 
 for i, (loc, (heading, opt_heading)) in enumerate(zip(positions, headings)):
     frame = i * 10
     
     can.location = loc
     can.rotation_euler = (rad90,0, math.radians(heading))
+    
     can.keyframe_insert('location', frame=frame)
     can.keyframe_insert('rotation_euler', frame=frame)
     
     opt_pointer.rotation_euler = (0,-rad90, math.radians(opt_heading - heading))
     opt_pointer.keyframe_insert('rotation_euler', frame=frame)
+    sky.altitude = loc[2]
+    sky.keyframe_insert('altitude', frame=frame)
 
     
 can.location=start_loc
