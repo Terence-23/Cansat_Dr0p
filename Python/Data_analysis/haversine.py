@@ -168,18 +168,6 @@ except ModuleNotFoundError:
     # Import error will be reported in haversine_vector() / inverse_haversine_vector()
     has_numpy = False
 
-try:
-    import numba # type: ignore
-    if has_numpy:
-        _haversine_kernel_vector = numba.vectorize(fastmath=True)(_haversine_kernel)
-        # Tuple output is not supported for numba.vectorize. Just jit the numpy version.
-        _inverse_haversine_kernel_vector = numba.njit(fastmath=True)(_inverse_haversine_kernel_vector)
-    _haversine_kernel = numba.njit(_haversine_kernel)
-    _inverse_haversine_kernel = numba.njit(_inverse_haversine_kernel)
-except ModuleNotFoundError:
-    pass
-
-
 def haversine_distance(point1, point2, unit=Unit.KILOMETERS, normalize=False, check=True):
     """ Calculate the great-circle distance between two points on the Earth surface.
 
