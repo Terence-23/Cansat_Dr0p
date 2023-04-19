@@ -37,7 +37,7 @@ def get_rotation(point1, point2):
 
     print(dx, dy)
     # Calculate the angle from the positive x-axis
-    angle = -atan2(dx, dy)
+    angle = atan2(dy, dx)
     
     assert atan2(dy, dx) == math.atan2(dy, dx)
 
