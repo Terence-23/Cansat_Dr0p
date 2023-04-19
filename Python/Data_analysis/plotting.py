@@ -2,6 +2,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from bisect import bisect_left
+import sys
 
 def v_length(x, y, z = None) -> float:
     if z is None:
@@ -56,14 +57,16 @@ packet_num = np.linspace(0, len(lats), len(lats))
 
 fig, ax = plt.subplots(figsize=(16, 9), layout='constrained')
 
-ax.plot(packet_num, headings, label='headings')  # Plot some data on the axes.
-ax.plot(packet_num, des_headings, label='optimal headings')  # Plot more data on the axes...
+ax.plot(packet_num, headings, label='heading')  # Plot some data on the axes.
+ax.plot(packet_num, des_headings, label='optimal heading')  # Plot more data on the axes...
 ax.set_xlabel('number of packet')  # Add an x-label to the axes.
 ax.set_ylabel('deg')  
 ax.set_title("Heading vs. desired heading")  # Add a title to the axes.
 
 fig.legend(loc='upper right')
 fig.savefig('Renders/You spin me round.png', dpi = 400)
+plt.show()
+sys.exit()
 
 # Press and Alt
 
@@ -81,6 +84,7 @@ ax.set_title("Pressure & altitude")  # Add a title to the axes.
 
 fig.legend(loc='upper right')
 fig.savefig('Renders/Presssure & altitude.png', dpi = 400)
+
 
 # Temp and Hum
 
@@ -127,6 +131,6 @@ ax.set_title("Acceleration")  # Add a title to the axes.
 fig.legend(loc='upper right')
 fig.savefig('Renders/Gravity.png', dpi = 400)
     
-plt.show()
+
 
     

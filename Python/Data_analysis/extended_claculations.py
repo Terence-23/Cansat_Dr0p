@@ -3,6 +3,7 @@ import sys
 sys.path.append('..')
 
 import math, time
+from numpy import arctan2 as atan2
 import numpy as np
 from ast import literal_eval as l_eval
 from haversine import haversine_distance, Unit
@@ -30,19 +31,21 @@ def compass_reading(magnetometer_x, magnetometer_y, magnetometer_z):
 def get_rotation(point1, point2):
     x1, y1 = point1
     x2, y2 = point2
-
     # Calculate the difference between the points
     dx = x2 - x1
     dy = y2 - y1
 
+    print(dx, dy)
     # Calculate the angle from the positive x-axis
-    angle = math.atan2(dy, dx)
+    angle = -atan2(dx, dy)
+    
+    assert atan2(dy, dx) == math.atan2(dy, dx)
 
     # Convert the angle from radians to degrees
     angle = math.degrees(angle)
 
     # Make sure the angle is positive
-    angle = (angle + 360 - 45) % 360
+    angle = (angle + 360) % 360
 
     return angle
 
@@ -61,6 +64,7 @@ def calc_heading(packet, hardiron_calibration):
     return compass_reading(*normalize(magvals, hardiron_calibration))
 
 def calc_optimal_heading(packet, desired_pos):
+    print(packet, desired_pos)
     return get_rotation(packet[1:3], desired_pos)
 
 def calc_horizontal_speed(packet, prev_packet):
@@ -103,7 +107,7 @@ def calc_all_packets(packets):
     hardiron = np.array(l_eval(open("cal_data").readline()))
     desired_pos = 50.3369282, 19.5322675 
     
-    post_calc = ['timestamp,lat,lon,acc_x,acc_y,acc_z,mag_x,mag_y,mag_z,heading,opt_heading,hor_speed, ctime, turn_status']
+    post_calc = ['timestamp,lat,lon,acc_ximport ,acc_y,acc_z,mag_x,mag_y,mag_z,heading,opt_heading,hor_speed, ctime, turn_status']
     
     packet = packets[0]
     
@@ -132,7 +136,7 @@ def calc_all_packets(packets):
             prev_packet = packet
     
     post_calc_csv = '\n'.join(post_calc)
-    print(post_calc_csv)
+    # print(post_calc_csv)
     with open('extended_c.csv', 'w') as f:
         f.write(post_calc_csv)
     
