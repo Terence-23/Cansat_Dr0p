@@ -1,3 +1,5 @@
+#!/bin/python3
+
 from new_main import Servo
 import time
 
