@@ -1,4 +1,4 @@
-We are a team of six high-schoolers from Bednarska Szkoła Realna. We take part in an international contest – CanSat, organised for over 20 years by ESA (European Space Agency) and CNK (Centrum Nauki Kopernik). The goal of the contest is to build and drop from 2 kilometres a can-sized probe. During and after the landing, the probe must complete two, previously defined, missions staying in touch with the ground station.
+We are a team of four high-schoolers from Bednarska Szkoła Realna. We take part in an international contest – CanSat, organised for over 20 years by ESA (European Space Agency) and CNK (Centrum Nauki Kopernik). The goal of the contest is to build and drop from 2 kilometres a can-sized probe. During and after the landing, the probe must complete two, previously defined, missions staying in touch with the ground station.
 
 Primary mission depends on measuring pressure, temperature, humidity. We will use this data to: make a 3D model of CanSat's flight, calculate falling speed and compare accelerometer data with height and GPS position. If it turns out to be possible, we will also make a short term weather forecast.
 
