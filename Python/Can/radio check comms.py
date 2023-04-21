@@ -1,3 +1,4 @@
+#!/bin/python3
 import adafruit_rfm9x
 import digitalio, busio, board
 import time, traceback
