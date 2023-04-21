@@ -57,8 +57,6 @@ def get_rotation_difference(current_heading, desired_heading):
         difference += 360
     return difference
 
-
-
 def calc_heading(packet, hardiron_calibration):
     magvals = packet[6:9]
     return compass_reading(*normalize(magvals, hardiron_calibration))
@@ -137,7 +135,7 @@ def calc_all_packets(packets):
     
     post_calc_csv = '\n'.join(post_calc)
     # print(post_calc_csv)
-    with open('extended_c.csv', 'w') as f:
+    with open('Data/extended_c.csv', 'w') as f:
         f.write(post_calc_csv)
     
-calc_all_packets(read_packets('extended.csv'))
+calc_all_packets(read_packets('Data/extended.csv'))

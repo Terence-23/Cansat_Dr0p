@@ -10,7 +10,7 @@ def v_length(x, y, z = None) -> float:
     return np.sqrt(x*x + y*y + z*z)
 
 
-def read_data(path = ''):
+def read_data(path = 'Data/'):
     
     with open(path + 'extended_c.csv') as f:
         ext_csv = [[float(v) for j, v in enumerate(i.strip().split(',')) if j != 12] for i in f.readlines()[621:1400]]
@@ -65,8 +65,6 @@ ax.set_title("Heading vs. desired heading")  # Add a title to the axes.
 
 fig.legend(loc='upper right')
 fig.savefig('Renders/You spin me round.png', dpi = 400)
-plt.show()
-sys.exit()
 
 # Press and Alt
 
@@ -131,6 +129,5 @@ ax.set_title("Acceleration")  # Add a title to the axes.
 fig.legend(loc='upper right')
 fig.savefig('Renders/Gravity.png', dpi = 400)
     
-
-
+plt.show()
     

@@ -42,7 +42,7 @@ def calc_all_packets(packets):
     
     post_calc_csv = '\n'.join(post_calc)
     print(post_calc_csv)
-    with open('base_c.csv', 'w') as f:
+    with open('Data/base_c.csv', 'w') as f:
         f.write(post_calc_csv)
         
-calc_all_packets(read_packets('base.csv'))
+calc_all_packets(read_packets('Data/base.csv'))

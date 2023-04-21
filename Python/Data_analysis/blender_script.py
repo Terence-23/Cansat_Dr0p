@@ -15,10 +15,10 @@ from bisect import bisect_left
 import math
 
 def prepare_data():
-    with open('extended_c.csv') as f:
+    with open('Data/extended_c.csv') as f:
         ext_csv = [[float(j) for j in i.strip().split(',')[:-1]] for i in f.readlines()[1:]]
     
-    with open('base_c.csv') as f:
+    with open('Data/base_c.csv') as f:
         b_csv = [[float(j) for j in i.strip().split(',')[:-1]] for i in f.readlines()[1:]]
 
 #    read lats and lons

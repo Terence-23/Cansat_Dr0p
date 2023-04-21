@@ -15,7 +15,7 @@ def load_log(file_name: str):
 def write_csv():
     base = []
     ext = []
-    for i in load_log('log.out'):
+    for i in load_log('Data/log.out'):
         if i.packet_type == PacketType.BASE:
             base.append(i.encode().split(';')[1:])
         elif i.packet_type == PacketType.EXTENDED:
@@ -23,12 +23,12 @@ def write_csv():
     
     base_csv = '\n'.join((','.join(i) for i in base))
     print(base_csv)
-    with open('base.csv', 'w') as f:
+    with open('Data/base.csv', 'w') as f:
         f.write(base_csv)
     
     ext_csv = '\n'.join((','.join(i) for i in ext))
     print(ext_csv)
-    with open('extended.csv', 'w') as f:
+    with open('Data/extended.csv', 'w') as f:
         f.write(ext_csv)
     
     
