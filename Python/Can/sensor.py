@@ -1,17 +1,18 @@
 # file for sensor communication
 
-from multiprocessing import Value
+from multiprocessing import Value, Array, Process, Queue
 import adafruit_lsm303_accel
 import adafruit_lis2mdl
 import time
 from lib.L76x import L76X
 # import math
 import comms
-from time import ctime
 from typing import Tuple
 import board
 import digitalio
 import adafruit_bme680
+from adafruit_onewire.bus import OneWireBus
+from adafruit_ds18x20 import DS18X20
 
 SD_o: comms.SD
 PRESSUREHPA = 1013
@@ -58,6 +59,8 @@ class LSM303:
 
 class L76x:
     
+    path = 'Data/gps.out'
+    
     refresh_delay=1000
     l_rf_time = 0
     gps:L76X.L76X
@@ -92,6 +95,8 @@ class L76x:
             lat.value = self.gps.Lat
             lon.value = self.gps.Lon
             fix.value = self.gps.Status
+            with open(self.path, 'a')as f:
+                f.write(f'{time.time()};{self.gps.Lat};{self.gps.Lon};{self.gps.Status}\n')
 
         except KeyboardInterrupt as e:
             raise e
@@ -113,3 +118,27 @@ class L76x:
         # if self.l_rf_time + self.refresh_delay <= time.time() * 1000: self.refresh()
         return self.gps.Lon
 
+class Dallas:
+    temp = -10000
+    log_path = 'Data/dallas.out'
+    pin = board.D5
+    def __init__(self) -> None:
+        ow_bus = OneWireBus(self.pin)
+        self.ds18 = DS18X20(ow_bus, ow_bus.scan()[0])
+        self.ds18.resolution = 12
+        self.rProcess = Process(target=self.refresh)
+        self.rProcess.start()
+    
+    def log_temp(self, path):
+        with open(path, 'a') as f:
+            f.write(f'{time.time()};{self.temp}\n')
+    
+    def refresh(self):
+        while True:
+            if self.ds18.temperature != self.temp:
+                self.temp = self.ds18.temperature
+                self.log_temp(self.log_path)
+                
+            time.sleep(0.125)
+    
+    

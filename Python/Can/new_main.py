@@ -197,7 +197,7 @@ def main():
     last_rotate = time.time() -turn_delay
     e = 10
  
-    comms.SD_o = comms.SD('log.out')
+    comms.SD_o = comms.SD('Data/log.out')
     sensor.SD_o = comms.SD_o
  
     lat = Value('d', 0.0)
