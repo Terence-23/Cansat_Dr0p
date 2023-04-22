@@ -342,7 +342,7 @@ def main():
             if rotation_to_do < -e:
                 print(isturning)
                 # go Left
-
+                comms.SD_o.write(comms.FL_STEER, 'left')
                 def repeat_function():
                     global isturning
                     print(isturning)
@@ -365,6 +365,7 @@ def main():
 
             elif rotation_to_do > e:
                 # go Right
+                comms.SD_o.write(comms.FL_STEER, 'right')
                 def repeat_function():
                     global isturning
                     # replace function with function to rotate servo by 45 degrees
@@ -389,6 +390,7 @@ def main():
                     isturning = False
 
             else:
+                comms.SD_o.write(comms.FL_STEER, 'neutral')
                 def repeat_function():
                     global isturning
                     print('neutral')
