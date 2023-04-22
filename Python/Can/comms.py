@@ -95,6 +95,7 @@ PWR = 20
 
 
 class Radio:
+    log_path = 'Data/radio.out'
     def __init__(self, cs=CS, rst=RESET, power=PWR, freq=FREQ, spi=busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)):
         self.cs = cs
         self.rst = rst
@@ -118,6 +119,8 @@ class Radio:
             else:
                 print("packet")
                 # SD_o.write(FL_DEBUG, f"RSSI:{self.rfm9x.last_rssi}")
+                with open(self.log_path, 'a') as f:
+                    f.write(f'{time.time()}::{packet}::{self.rfm9x.last_rssi}\n')
                 return str(packet, 'ascii')
         except KeyboardInterrupt as e:
             raise e
