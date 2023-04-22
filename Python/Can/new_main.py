@@ -17,10 +17,10 @@ from multiprocessing import Process, Value, Queue
 
 
 class Servo:
-    #left = 120
+    # left = 120
     left = 80
     neutral = 60
-    #right = 20
+    # right = 20
     right = 40
 
     def __init__(self, pwm=pwmio.PWMOut(board.D23, frequency=50)) -> None:
@@ -63,7 +63,7 @@ def compass_reading(magnetometer_x, magnetometer_y, magnetometer_z):
     # Convert the magnetometer readings to radians
     # magnetometer_x_rad = math.radians(magnetometer_x)
     # magnetometer_y_rad = math.radians(magnetometer_y)
-    
+
     # normvals = normalize(magvals, hardiron_calibration)
     # print("magnetometer: %s -> %s" % (magvals, normvals))
 
@@ -116,6 +116,7 @@ def normalize(_magvals, hardiron_calibration):
         ret[i] = (axis - minv) * 200 / (maxv - minv) + -100
     return ret
 
+
 def get_rotation_difference(current_heading, desired_heading):
     difference = desired_heading - current_heading
     if difference > 180:
@@ -125,55 +126,58 @@ def get_rotation_difference(current_heading, desired_heading):
     return difference
 
 
-def acceleration_wake(acceleration, accel : sensor.LSM303()):
+def acceleration_wake(acceleration, accel: sensor.LSM303()):
     accel = accel.getAcceleration()
-    return np.sqrt(accel[0] ** 2 + accel[1] ** 2+ accel[2] ** 2) > acceleration
-        
+    return np.sqrt(accel[0] ** 2 + accel[1] ** 2 + accel[2] ** 2) > acceleration
 
-event_q =  Queue()  
+
+event_q = Queue()
 send_q = Queue()
 
+
 def wake_check(lsm, bme):
-    
+
     print('wake check')
     g = 9.82
     alt = 50
     acc = 3*g
-    
-    check_fs = [(acceleration_wake , acc, lsm), (lambda alt, bme: bme.getAltitude() > alt, alt, bme)]
-    
+
+    check_fs = [(acceleration_wake, acc, lsm), (lambda alt,
+                                                bme: bme.getAltitude() > alt, alt, bme)]
+
     for i, (v, *args) in enumerate(check_fs):
         print(f"{i} {v.__name__} {args}")
         print(v(*args))
-        
+
         comms.SD_o.write('WAKE', f'{v.__name__}: {v(*args)}')
         comms.SD_o.write('WAKE', f'{bme.getPress()}')
         if v(*args):
             print('wake')
             return True
-    
+
     print('sleep')
     return False
-    
-    
+
+
 def wake_checker(lsm, bme, sleeping):
     print('start wake checker')
     while True:
         time .sleep(0.1)
-        print(sleeping.value ,'sleeping')
+        print(sleeping.value, 'sleeping')
         if sleeping.value and wake_check(lsm, bme):
             comms.SD_o.write(comms.FL_DEBUG, 'auto_wake')
             packet = Packet.create_command_packet(time.time(), Command.WAKE)
             event_q.put(packet.encode())
-            
+
+
 def radio_recv(radio):
     while True:
         while not send_q.empty():
-            try: 
+            try:
                 radio.send(send_q.get(block=False))
             except:
                 pass
-        
+
         text = radio.recv(with_ack=True)
         if not text is None:
             event_q.put(text)
@@ -185,39 +189,42 @@ def gps_refresh(lat, lon, gpsFix, runCount):
 
     while True:
         runCount.value += 1
-        gps.refresh(lat,lon,gpsFix)
+        gps.refresh(lat, lon, gpsFix)
+
 
 isturning = False
+
 
 def main():
     global isturning
     # init
     sleeping = Value('i', 1)
-    turn_delay= 1 #seconds
-    last_rotate = time.time() -turn_delay
+    turn_delay = 1  # seconds
+    last_rotate = time.time() - turn_delay
     e = 10
- 
+
     comms.SD_o = comms.SD('Data/log.out')
     sensor.SD_o = comms.SD_o
- 
+
     lat = Value('d', 0.0)
     lon = Value('d', 0.0)
     gpsFix = Value('i', 0)
     runCount = Value('i', 0)
-    
-    desiredPos = 50.3369282, 19.5322675 
-   
+
+    desiredPos = 50.3369282, 19.5322675
+
+    dallas = sensor.Dallas()
     lsm = sensor.LSM303()
     bme = sensor.BME(i2c=board.I2C())
     bme.setSeaLevelPressure(bme.getPress())
     radio = comms.Radio(comms.CS, comms.RESET, comms.PWR, comms.FREQ)
-    
-    gps_p = Process(target=gps_refresh, args=(lat, lon, gpsFix,runCount,))
+
+    gps_p = Process(target=gps_refresh, args=(lat, lon, gpsFix, runCount,))
     gps_p.start()
-    
+
     radio_p = Process(target=radio_recv, args=(radio,))
     radio_p.start()
-    
+
     wake_p = Process(target=wake_checker, args=(lsm, bme, sleeping,))
     wake_p.start()
 
@@ -227,14 +234,14 @@ def main():
     c_press = bme.getPress()
     sleep_time = time.monotonic()
     sleep_delay = 600
-    
+
     print('freq', radio.rfm9x.frequency_mhz)
 
     while 1:
         print(runCount.value)
-        #send basic packet
+        # send basic packet
         packet_b = Packet.create_base_packet(
-            time.time(), bme.getTemp(), bme.getPress(), bme.getHum(), bme.getAltitude())
+            time.time(), dallas.temp, bme.getPress(), bme.getHum(), bme.getAltitude())
 
         comms.SD_o.write(comms.FL_PACKET, packet_b.to_json())
         print(packet_b.to_json())
@@ -242,15 +249,15 @@ def main():
             send_q.put_nowait(packet_b.encode())
         except:
             comms.SD_o.write(comms.FL_ERROR, 'send queue is full')
-        
-        #deal with all incoming packets
+
+        # deal with all incoming packets
         while not event_q.empty():
             print('event_q not empty')
-            in_text = event_q.get(block = False)
+            in_text = event_q.get(block=False)
             if not in_text is None:
                 print(in_text)
                 try:
-                    in_packet = Packet.decode(in_text)     
+                    in_packet = Packet.decode(in_text)
                     comms.SD_o.write(comms.FL_PACKET, in_packet.to_json())
                     if in_packet.packet_type == PacketType.COMMAND:
                         command = in_packet.payload['command']
@@ -264,32 +271,34 @@ def main():
                             desiredPos = in_packet.payload['args']
                             comms.SD_o.write(comms.FL_DEBUG, desiredPos)
                         elif command == Command.SETPRESS:
-                            bme.setSeaLevelPressure(in_packet.payload['args'][0])
-                            comms.SD_o.write(comms.FL_DEBUG, bme.getSeaLevelPressure())
+                            bme.setSeaLevelPressure(
+                                in_packet.payload['args'][0])
+                            comms.SD_o.write(
+                                comms.FL_DEBUG, bme.getSeaLevelPressure())
                         else:
-                            comms.SD_o.write(comms.FL_ERROR, 
-                                "Invalid command in Packet: {}".format(in_packet.to_json()))
+                            comms.SD_o.write(comms.FL_ERROR,
+                                             "Invalid command in Packet: {}".format(in_packet.to_json()))
                     else:
-                        comms.SD_o.write(comms.FL_ERROR, 
-                            "Packet not a command: {}".format(in_packet.to_json()))
-                    
+                        comms.SD_o.write(comms.FL_ERROR,
+                                         "Packet not a command: {}".format(in_packet.to_json()))
+
                 except KeyboardInterrupt as e:
                     raise e
-                
+
                 except Exception as e:
                     comms.SD_o.write(comms.FL_ERROR, traceback.format_exc())
-                    traceback.print_exc()                
-                
-            else: 
+                    traceback.print_exc()
+
+            else:
                 comms.SD_o.write(comms.FL_PACKET, 'no Packet recieved')
-        
-        
-        if sleeping.value == 1: 
-            print ('sleeping')
-                
+
+        if sleeping.value == 1:
+            print('sleeping')
+
             time.sleep(0.5)
         else:
-            print(c_press, not (c_press + 1 > bme.getPress() > c_press - 1), bme.getPress(), sep=' ')
+            print(c_press, not (c_press + 1 > bme.getPress()
+                  > c_press - 1), bme.getPress(), sep=' ')
             # go to sleep
             if not c_press + 2 > bme.getPress() > c_press - 2:
                 c_press = bme.getPress()
@@ -300,8 +309,9 @@ def main():
                 # raise Exception('sleep')
 
             print(gpsFix.value)
-            #send extended packet
-            packet_e = Packet.create_extended_packet(math.floor(time.time()), lat.value, lon.value, *lsm.getAcceleration(), *lsm.getMagnetic())
+            # send extended packet
+            packet_e = Packet.create_extended_packet(math.floor(
+                time.time()), lat.value, lon.value, *lsm.getAcceleration(), *lsm.getMagnetic())
 
             try:
                 send_q.put_nowait(packet_e.encode())
@@ -311,8 +321,8 @@ def main():
             comms.SD_o.write(comms.FL_PACKET, packet_e.to_json())
 
             # pitch, roll = calculate_angles(*lsm.getAcceleration())
-            
-            #steer
+
+            # steer
             print(f"isturning: {isturning}")
             if isturning:
                 continue
@@ -320,33 +330,35 @@ def main():
             print("Turning")
             # last_rotate = time.time()
 
-            mag_corected = normalize(np.array(lsm.getMagnetic()), hardiron_calibration)
+            mag_corected = normalize(
+                np.array(lsm.getMagnetic()), hardiron_calibration)
             compass = compass_reading(*mag_corected)
             rotation = get_rotation((lat.value, lon.value), desiredPos)
             rotation_to_do = get_rotation_difference(compass, rotation)
-            
-            print(f"compass: {compass}, rotation: {rotation}, get_rotation_difference: {rotation_to_do}")
 
+            print(
+                f"compass: {compass}, rotation: {rotation}, get_rotation_difference: {rotation_to_do}")
 
             if rotation_to_do < -e:
                 print(isturning)
                 # go Left
+
                 def repeat_function():
                     global isturning
                     print(isturning)
                     # replace function with function to rotate servo by 45 degrees
                     print('go left')
-                    servo.rotate(servo.left) 
+                    servo.rotate(servo.left)
                     start = time.time()
-                    #des_rotation = get_rotation((lat, lon), desiredPos)
-                    while get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
-                        hardiron_calibration)),rotation) < -e and time.time() < start + turn_delay:
+                    # des_rotation = get_rotation((lat, lon), desiredPos)
+                    while get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()),
+                                                                             hardiron_calibration)), rotation) < -e and time.time() < start + turn_delay:
                         # Add a delay if necessary
                         # print(get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), hardiron_calibration)),rotation))
                         time.sleep(0.020)
-                    
-                    if not get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
-                        hardiron_calibration)),rotation) < -e :        
+
+                    if not get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()),
+                                                                              hardiron_calibration)), rotation) < -e:
                         servo.rotate(servo.neutral)
                         print("neutral left")
                     isturning = False
@@ -361,17 +373,17 @@ def main():
 
                     print('go right')
                     start = time.time()
-                    #des_rotation = get_rotation(
+                    # des_rotation = get_rotation(
                     #    (lat, lon), desiredPos)
-                    while get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
-                        hardiron_calibration)),rotation) > e and time.time() < \
-                        start + turn_delay:
+                    while get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()),
+                                                                             hardiron_calibration)), rotation) > e and time.time() < \
+                            start + turn_delay:
                         # print(get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), hardiron_calibration)),rotation))
                         # Add a delay if necessary
                         time.sleep(0.020)
 
-                    if not get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()), 
-                        hardiron_calibration)),rotation) > e:
+                    if not get_rotation_difference(compass_reading(*normalize(np.array(lsm.getMagnetic()),
+                                                                              hardiron_calibration)), rotation) > e:
                         servo.rotate(servo.neutral)
                         print("neutral right")
                     isturning = False
@@ -382,9 +394,8 @@ def main():
                     print('neutral')
                     servo.rotate(servo.neutral)
                     isturning = False
-                    
+
             repeat_function()
-            
 
 
 if __name__ == '__main__':
