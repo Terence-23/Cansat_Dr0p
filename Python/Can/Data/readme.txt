@@ -1,0 +1,1 @@
+Folder for output data of CanSat
