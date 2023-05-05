@@ -108,8 +108,6 @@ class LSM303:
                 self.acc = self.accel.acceleration
                 with open(self.path_acc, 'a')as f:
                     f.write(f'{time.time()};{";".join(map(str, self.acc))}\n')
-
-            if self.mag.magnetic != self.magvals:
                 self.magvals = self.mag.magnetic
                 with open(self.path_acc, 'a')as f:
                     f.write(
