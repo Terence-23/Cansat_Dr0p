@@ -41,9 +41,9 @@ class BME:
 
     def refresh(self):
         while True:
-            if self.temp != self.sensor.temperature or\
-                self.press != self.sensor.pressure or\
-                self.hum != self.sensor.humdidty:
+            if self.temp.value != self.sensor.temperature or\
+                self.press.value != self.sensor.pressure or\
+                self.hum.value != self.sensor.humdidty:
                 
                 self.temp.value = self.sensor.temperature
                 self.press.value = self.sensor.pressure
@@ -97,7 +97,7 @@ class LSM303:
 
     def refresh(self):
         while True:
-            if self.accel.acceleration != self.acc or self.mag.magnetic != self.magvals:
+            if self.accel.acceleration != self.acc[:] or self.mag.magnetic != self.magvals[:]:
                 self.acc.get_obj()[:] = self.accel.acceleration
                 self.magvals.get_obj()[:] = self.mag.magnetic
                 with open(self.log_path, 'a')as f:
