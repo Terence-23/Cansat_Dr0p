@@ -20,10 +20,10 @@ PRESSUREHPA = 1013
 
 class BME:
     sensor: adafruit_bme680.Adafruit_BME680
-    temp = -1000
-    press = -1000
-    hum = -1000
-    alt = -1000
+    temp = Value('d',-1000)
+    press = Value('d',-1000)
+    hum = Value('d',-1000)
+    alt = Value('d',-1000)
 
     log_path = 'Data/BME.out'
     
@@ -45,13 +45,13 @@ class BME:
                 self.press != self.sensor.pressure or\
                 self.hum != self.sensor.humdidty:
                 
-                self.temp = self.sensor.temperature
-                self.press = self.sensor.pressure
-                self.alt = self.sensor.altitude
-                self.hum = self.sensor.humidity
+                self.temp.value = self.sensor.temperature
+                self.press.value = self.sensor.pressure
+                self.alt.value = self.sensor.altitude
+                self.hum.value = self.sensor.humidity
                 
                 with open(self.temp_path, 'a') as f:
-                    f.write(f'{time.time()};{self.temp};{self.press};{self.hum};{self.alt}\n')
+                    f.write(f'{time.time()};{self.temp.value};{self.press.value};{self.hum.value};{self.alt.value}\n')
 
             time.sleep(0.199)
 
@@ -63,22 +63,22 @@ class BME:
         return self.sensor.sea_level_pressure
 
     def getAltitude(self):
-        return self.alt
+        return self.alt.value
 
     def getTemp(self):
-        return self.temp
+        return self.temp.value
 
     def getHum(self):
-        return self.hum
+        return self.hum.value
 
     def getPress(self):
-        return self.press
+        return self.press.value
 
 
 class LSM303:
 
-    acc: Tuple[float, float, float] = ()
-    magvals: Tuple[float, float, float] = ()
+    acc = Array('d',3)
+    magvals = Array('d',3)
     log_path = 'Data/LSM.out'
 
     def __init__(self, i2c=board.I2C()) -> None:
@@ -90,18 +90,18 @@ class LSM303:
         self.rProcess.start()
 
     def getAcceleration(self) -> Tuple[float, float, float]:
-        return self.acc
+        return self.acc[:]
 
     def getMagnetic(self) -> Tuple[float, float, float]:
-        return self.magvals
+        return self.magvals[:]
 
     def refresh(self):
         while True:
             if self.accel.acceleration != self.acc or self.mag.magnetic != self.magvals:
-                self.acc = self.accel.acceleration
-                self.magvals = self.mag.magnetic
+                self.acc.get_obj()[:] = self.accel.acceleration
+                self.magvals.get_obj()[:] = self.mag.magnetic
                 with open(self.log_path, 'a')as f:
-                    f.write(f'{time.time()};{";".join(map(str, self.acc))};{";".join(map(str, self.magvals))}\n')
+                    f.write(f'{time.time()};{";".join(map(str, self.acc[:]))};{";".join(map(str, self.magvals[:]))}\n')
 
             time.sleep(0.009)
 
@@ -171,7 +171,7 @@ class L76x:
 
 class Dallas:
 
-    temp = -10000
+    temp = Value('d', -10000)
     log_path = 'Data/dallas.out'
     pin = board.D5
 
@@ -184,12 +184,12 @@ class Dallas:
 
     def refresh(self):
         while True:
-            if self.ds18.temperature != self.temp:
-                self.temp = self.ds18.temperature
+            if self.ds18.temperature != self.temp.value:
+                self.temp.value = self.ds18.temperature
                 with open(self.log_path, 'a') as f:
-                    f.write(f'{time.time()};{self.temp}\n')
+                    f.write(f'{time.time()};{self.temp.value}\n')
 
             time.sleep(0.125)
 
     def GetTemp(self):
-        return self.temp
+        return self.temp.value
