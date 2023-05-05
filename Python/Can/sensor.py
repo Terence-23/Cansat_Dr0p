@@ -97,6 +97,7 @@ class LSM303:
 
     def refresh(self):
         while True:
+
             if self.accel.acceleration != self.acc[:] or self.mag.magnetic != self.magvals[:]:
                 self.acc.get_obj()[:] = self.accel.acceleration
                 self.magvals.get_obj()[:] = self.mag.magnetic
