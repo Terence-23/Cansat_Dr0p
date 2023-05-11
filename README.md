@@ -9,7 +9,7 @@ The probe made by us could be used as:
 
 1) relatively cheap and easy to deploy exploration drone,
 
-2) drone on the alien planet to analyse and document outside conditions
+2) drone on an alien planet to analyse and document outside conditions
 
 3) recovery system for model rockets
 
