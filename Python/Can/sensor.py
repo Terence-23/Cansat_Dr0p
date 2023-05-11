@@ -3,7 +3,6 @@
 from multiprocessing import Value, Array, Process, Queue
 import adafruit_lsm303_accel
 import adafruit_lis2mdl
-import time
 from lib.L76x import L76X
 # import math
 import comms
@@ -11,10 +10,9 @@ from typing import Tuple
 import board
 import digitalio
 import adafruit_bme680
-from adafruit_onewire.bus import OneWireBus
-from adafruit_ds18x20 import DS18X20
 import os
-import globimport math
+import glob
+import math
 import numpy as np
 from ast import literal_eval as l_eval
 import sys, time
