@@ -52,7 +52,7 @@ class BME:
                 self.alt.value = self.sensor.altitude
                 self.hum.value = self.sensor.humidity
                 
-                with open(self.temp_path, 'a') as f:
+                with open(self.log_path, 'a') as f:
                     f.write(f'{time.time()};{self.temp.value};{self.press.value};{self.hum.value};{self.alt.value}\n')
 
             time.sleep(0.199)
