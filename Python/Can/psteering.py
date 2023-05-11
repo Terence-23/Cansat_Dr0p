@@ -1,6 +1,5 @@
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 from ast import literal_eval as l_eval
 import sys, time
 
@@ -114,6 +113,8 @@ def lin_function(x):
 
 
 def show_curves():
+    import matplotlib.pyplot as plt
+    
     x_values = np.linspace(-1, 2, 100)
 
     # Calculate the corresponding y values
