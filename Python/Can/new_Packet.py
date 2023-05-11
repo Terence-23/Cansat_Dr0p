@@ -17,6 +17,21 @@ class Command(Enum):
     SETPRESS = 'setPress'
 
 
+class JSON:
+    @staticmethod
+    def to_json(obj):
+        if isinstance(obj, dict):
+            return f'{{{",".join([f"{JSON.to_json(k)}:{JSON.to_json(v)}" for k,v in obj.items()])}}}'
+            
+        elif isinstance(obj, str):
+            return f'"{obj}"'
+        
+        elif isinstance(obj, list) or isinstance(obj, tuple):
+            return f'[{", ".join([JSON.to_json(i) for i in obj])}]'
+        elif isinstance(obj, int) or isinstance(obj, float):
+            return f'{obj}'
+        
+
 class Packet:
     def __eq__(self, other):
         if isinstance(other, Packet):
@@ -90,13 +105,12 @@ class Packet:
     def to_json(self):
         if self.packet_type == PacketType.COMMAND:
             
-            return json.dumps({
+            return JSON.to_json({
             'packet_type': self.packet_type.value,
             'timestamp': self.timestamp,
             'payload': {k: str(v) for k, v in self.payload.items()}
         })
-        
-        return json.dumps({
+        return JSON.to_json({
             'packet_type': self.packet_type.value,
             'timestamp': self.timestamp,
             'payload': self.payload
@@ -155,7 +169,7 @@ def main():
 
     print(base_packet.to_json())
     
-    with open('/home/jerzy/Data/Programowanie/Cansat/Python/Ground/sampleData.json') as json_file:
+    with open('/home/jerzy/Data/Programowanie/Cansat/Python/Can/sampleData.json') as json_file:
         data = json.load(json_file)
         packets = []
         for i in data:

@@ -45,7 +45,7 @@ class BME:
         while True:
             if self.temp.value != self.sensor.temperature or\
                 self.press.value != self.sensor.pressure or\
-                self.hum.value != self.sensor.humdidty:
+                self.hum.value != self.sensor.humidity:
                 
                 self.temp.value = self.sensor.temperature
                 self.press.value = self.sensor.pressure
