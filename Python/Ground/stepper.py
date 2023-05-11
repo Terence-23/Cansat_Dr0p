@@ -88,7 +88,7 @@ class Stepper:
             self.backwards(steps_to_do)
 
     def forward(self, steps):
-        self.dir_pin = 0
+        self.dir_pin.value = 0
         delay = self.delay
         for _ in range(steps):
             self.step_pin.value = 1
@@ -97,7 +97,7 @@ class Stepper:
             time.sleep(delay)
 
     def backwards(self, steps):
-        self.dir_pin = 1
+        self.dir_pin.value = 1
         delay = self.delay
         for _ in range(steps):
             self.step_pin.value = 1
