@@ -13,6 +13,8 @@ import digitalio
 import adafruit_bme680
 from adafruit_onewire.bus import OneWireBus
 from adafruit_ds18x20 import DS18X20
+import os
+import glob
 
 SD_o: comms.SD
 PRESSUREHPA = 1013
@@ -175,22 +177,38 @@ class Dallas:
     temp = Value('d', -10000)
     log_path = 'Data/dallas.out'
     pin = board.D5
+    
+    
+    def read_temp(self):
+        with open(self.device_file, 'r') as f:
+            lines = f.readlines()
+            while lines[0].strip()[-3:] != 'YES':
+                time.sleep(0.2)
+                lines = f.readlines()
+        equals_pos = lines[1].find('t=')
+        if equals_pos != -1:
+            temp_string = lines[1][equals_pos+2:]
+            temp_c = float(temp_string) / 1000.0
+            return temp_c
 
     def __init__(self) -> None:
-        ow_bus = OneWireBus(self.pin)
-        self.ds18 = DS18X20(ow_bus, ow_bus.scan()[0])
-        self.ds18.resolution = 12
         self.rProcess = Process(target=self.refresh)
         self.rProcess.start()
+        os.system('modprobe w1-gpio')
+        os.system('modprobe w1-therm')
+        
+        self.base_dir = '/sys/bus/w1/devices/'
+        self.device_folder = glob.glob(self.base_dir + '28*')[0]
+        self.device_file = self.device_folder + '/w1_slave'
 
     def refresh(self):
         while True:
-            if self.ds18.temperature != self.temp.value:
-                self.temp.value = self.ds18.temperature
+            temp = self.read_temp()
+            if temp != self.temp.value:
+                self.temp.value = temp
                 with open(self.log_path, 'a') as f:
                     f.write(f'{time.time()};{self.temp.value}\n')
 
-            time.sleep(0.125)
 
     def GetTemp(self):
         return self.temp.value
