@@ -136,12 +136,12 @@ def main():
     wake_p.start()
     
     # left, right, neutral, max_t, servo, lsm, gps
+    servo = Servo()
     steer_p = Process(target=steer_target, args=(servo.left, servo.right, servo.neutral, 60, servo, lsm, [lat,lon], desiredPos,sleeping,))
     steer_p.start()
 
     time.sleep(0)
     # hardiron_calibration = calibrate()
-    servo = Servo()
     c_press = bme.getPress()
     sleep_time = time.monotonic()
     sleep_delay = 600
