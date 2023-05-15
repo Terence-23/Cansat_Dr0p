@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 
-from multiprocessing import Process, Queue, Value
+from multiprocessing import Process, Queue, Value, Array
 import time
 import board
 import digitalio
@@ -182,11 +182,11 @@ class StepperH:
 
 
 class Aimbot:
-    target_pos = (90, 0)
+    target_pos = Array('d', [90, 0])
     self_pos = (0, 0)
-    h_rot = 0
-    v_rot = 0
-    alt_diff = 0
+    h_rot = Value('d',0)
+    v_rot = Value('d',0)
+    alt_diff = Value('d', 0)
     h_motor = Stepper()
     v_motor = Stepper()
     lsm: LSM303
@@ -250,7 +250,7 @@ class Aimbot:
         h_step_angle = self.h_motor.step_to_rad(1)
         v_step_angle = self.v_motor.step_to_rad(1)
         while True:
-            alfa, beta = self.calc_antenna_angle(self.self_pos, self.target_pos, self.alt_diff, degrees=False)
+            alfa, beta = self.calc_antenna_angle(self.self_pos, self.target_pos[:], self.alt_diff.value, degrees=False)
             heading = compass_reading(*normalize(self.lsm.getMagnetic(), self.hardiron_calibration))
             pitch = calc_pitch(*self.lsm.getAcceleration())
             h_rot = alfa - heading
