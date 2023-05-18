@@ -1,7 +1,7 @@
 import math
 import numpy as np
 from ast import literal_eval as l_eval
-import sys, time
+import sys, time, traceback
 
 
 def rotate_vector(pitch, roll, vector):
@@ -131,9 +131,31 @@ def show_curves():
     plt.title('Function plot')
 
     # Show the plot
-    plt.show()
+    plt.savefig('curve.png')
     sys.exit()
     
+if __name__ == '__main__':
+    show_curves()
+    sys.exit()
+    
+
+
+from adafruit_motor import servo
+import pwmio, board
+
+class Servo:
+    # left = 120
+    left = 80
+    neutral = 60
+    # right = 20
+    right = 40
+
+    def __init__(self, pwm=pwmio.PWMOut(board.D23, frequency=50)) -> None:
+        self.s = servo.Servo(pwm, min_pulse=700, max_pulse=2250)
+
+    def rotate(self, angle: int):
+        self.s.angle = angle
+
 
 def steer(max_t, c_t, left, right):
     max_t = abs(max_t)
@@ -142,23 +164,28 @@ def steer(max_t, c_t, left, right):
     else:
         return left * quad_sqrt_function(-c_t/max_t)
     
-def steer_target(left, right, neutral, max_t, servo, lsm, gps, desiredPos, sleeping):
+def steer_target(left, right, neutral, max_t, lsm, gps, desiredPos, sleeping, servo_p):
     left = left - neutral
     right = right - neutral
     lat = gps[0]
     lon = gps[1]
     hardiron_calibration = np.array(l_eval(open("cal_data").readline()))
     
-    while True: 
-        if not sleeping.value:
-            mag_corected = normalize(
-                np.array(lsm.getMagnetic()), hardiron_calibration)
-            compass = compass_reading(*mag_corected)
-            rotation = get_rotation((lat.value, lon.value), [desiredPos[0].value, desiredPos[1].value])
-            rotation_to_do = get_rotation_difference(compass, rotation)
-            servo.rotate(neutral + steer(max_t, rotation_to_do, left, right))
-        time.sleep(.05)
+    try:
+        while True: 
+            if not sleeping.value:
+                print('steering')
+                mag_corected = normalize(
+                    np.array(lsm.getMagnetic()), hardiron_calibration)
+                compass = compass_reading(*mag_corected)
+                rotation = get_rotation((lat.value, lon.value), [desiredPos[0].value, desiredPos[1].value])
+                rotation_to_do = get_rotation_difference(compass, rotation)
+                print(f'steering: {(neutral + steer(max_t, rotation_to_do, left, right))}')
+                servo_p.value = (neutral + steer(max_t, rotation_to_do, left, right))
+            time.sleep(.05)
         
-        
+    except Exception as e: 
+        traceback.print_exc()
+        sys.exit('steer_exc')
     
     

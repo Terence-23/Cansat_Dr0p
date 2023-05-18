@@ -9,28 +9,10 @@ import time
 import board
 import digitalio
 import threading
-import pwmio
 import math
 import traceback
-from adafruit_motor import servo
 from multiprocessing import Process, Value, Queue
-from psteering import steer_target
-
-
-class Servo:
-    # left = 120
-    left = 80
-    neutral = 60
-    # right = 20
-    right = 40
-
-    def __init__(self, pwm=pwmio.PWMOut(board.D23, frequency=50)) -> None:
-        self.s = servo.Servo(pwm, min_pulse=700, max_pulse=2250)
-
-    def rotate(self, angle: int):
-        self.s.angle = angle
-
-
+from psteering import steer_target, Servo
 
 
 def acceleration_wake(acceleration, accel: sensor.LSM303()):
@@ -105,9 +87,10 @@ isturning = False
 def main():
     global isturning
     # init
-    sleeping = Value('i', 1)
-    turn_delay = 1  # seconds
-    last_rotate = time.time() - turn_delay
+    sleeping = Value('i', 0)
+    # turn_delay = 1
+    wake_cycle = 0.5 # seconds
+    # last_rotate = time.time() - turn_delay
     e = 10
 
     comms.SD_o = comms.SD('Data/log.out')
@@ -118,7 +101,7 @@ def main():
     gpsFix = Value('i', 0)
     runCount = Value('i', 0)
 
-    desiredPos = Value('d', 50.3369282), Value('d',19.5322675)
+    desiredPos = Value('d', 52.2175879), Value('d',21.0393806)
 
     dallas = sensor.Dallas()
     lsm = sensor.LSM303()
@@ -137,7 +120,8 @@ def main():
     
     # left, right, neutral, max_t, servo, lsm, gps
     servo = Servo()
-    steer_p = Process(target=steer_target, args=(servo.left, servo.right, servo.neutral, 60, servo, lsm, [lat,lon], desiredPos,sleeping,))
+    servo_rot = Value('d', servo.neutral)
+    steer_p = Process(target=steer_target, args=(Servo.left, Servo.right, Servo.neutral, 60, lsm, [lat,lon], desiredPos, sleeping, servo_rot,))
     steer_p.start()
 
     time.sleep(0)
@@ -232,6 +216,11 @@ def main():
             print(packet_e.to_json())
             comms.SD_o.write(comms.FL_PACKET, packet_e.to_json())
 
+            for i in range(int(wake_cycle * 10)):
+                servo.rotate(servo_rot.value)
+                print(f'servo rot: {servo_rot.value}')
+                time.sleep(.1)
+            
             # pitch, roll = calculate_angles(*lsm.getAcceleration())
 
             # # steer

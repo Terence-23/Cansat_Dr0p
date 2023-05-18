@@ -44,7 +44,7 @@ def get_rotation(point1, point2):
     dx = x2 - x1
     dy = y2 - y1
 
-    print(dx, dy)
+    # print(dx, dy)
     # Calculate the angle from the positive x-axis
     angle = atan2(dy, dx)
 
@@ -69,24 +69,25 @@ def get_rotation_difference(current_heading, desired_heading):
 
 
 # Headings
-def heading(path='Data/raw_data', start_time=0, end_time=None):
+def heading(path='Data/raw_data/', start_time=0, end_time=None):
 
     fig, ax = plt.subplots(figsize=(16, 9), layout='constrained')
     hardiron = np.array(l_eval(open("cal_data").readline()))
     desired_pos = 50.3369282, 19.5322675
 
     if end_time is not None:
-        def f(a): return a[0] > start_time
+        def fun(a): return a[0] > start_time
     else:
-        def f(a): return a[0] > start_time and a[0] < end_time
+        def fun(a): return a[0] > start_time and a[0] < end_time
 
     with open(path + 'gps.out', 'r') as f:
-        gps = filter(f, [[float(j) for j in i.strip().split(';')]
-                         for i in f.readlines()])
+        tmp = [[float(j) for j in i.strip().split(';')] for i in f.readlines()] 
+        gps = list(filter(fun, tmp))
 
     with open(path + 'LSM.out', 'r') as f:
-        lsm = filter(f, [[float(j) for j in i.strip().split(';')]
-                         for i in f.readlines()])
+        tmp = [[float(j) for j in i.strip().split(';')] for i in f.readlines()] 
+        lsm = list(filter(fun, tmp))
+
 
     timestamps = [i[0] for i in lsm]
 
@@ -122,15 +123,15 @@ def heading(path='Data/raw_data', start_time=0, end_time=None):
 # Press and Alt
 
 
-def pressure(path='Data/raw_data', start_time=0, end_time=None):
+def pressure(path='Data/raw_data/', start_time=0, end_time=None):
 
     if end_time is not None:
-        def f(a): return a[0] > start_time
+        def fun(a): return a[0] > start_time
     else:
-        def f(a): return a[0] > start_time and a[0] < end_time
+        def fun(a): return a[0] > start_time and a[0] < end_time
 
     with open(path + 'BME.out', 'r') as f:
-        packets = filter(f, [[float(j) for j in i.strip().split(';')]
+        packets = filter(fun, [[float(j) for j in i.strip().split(';')]
                          for i in f.readlines()])
 
     press = [i[2] for i in packets]
@@ -160,18 +161,18 @@ def pressure(path='Data/raw_data', start_time=0, end_time=None):
 # Temp and Hum
 
 
-def temp_hum(path='Data/raw_data', start_time=0, end_time=None):
+def temp_hum(path='Data/raw_data/', start_time=0, end_time=None):
 
     if end_time is not None:
-        def f(a): return a[0] > start_time
+        def fun(a): return a[0] > start_time
     else:
-        def f(a): return a[0] > start_time and a[0] < end_time
+        def fun(a): return a[0] > start_time and a[0] < end_time
 
     with open(path + 'BME.out', 'r') as file:
         packets = list(
-            filter(f, [[float(j) for j in i.strip().split(';')] for i in file.readlines()]))
+            filter(fun, [[float(j) for j in i.strip().split(';')] for i in file.readlines()]))
     with open(path + 'dallas.out', 'r') as file:
-        dallas = filter(f, [[float(j) for j in i.strip().split(';')]
+        dallas = filter(fun, [[float(j) for j in i.strip().split(';')]
                         for i in file.readlines()])
 
     temps = [i[1] for i in dallas]
@@ -203,19 +204,19 @@ def temp_hum(path='Data/raw_data', start_time=0, end_time=None):
 # speeds
 
 
-def speeds(path='Data/raw_data', start_time=0, end_time=None):
+def speeds(path='Data/raw_data/', start_time=0, end_time=None):
     # read data between timestamps
     if end_time is not None:
-        def f(a): return a[0] > start_time
+        def fun(a): return a[0] > start_time
     else:
-        def f(a): return a[0] > start_time and a[0] < end_time
+        def fun(a): return a[0] > start_time and a[0] < end_time
 
     with open(path + 'GPS.out', 'r') as f:
-        gps = filter(f, ([float(j) for j in i.strip().split(';')]
+        gps = filter(fun, ([float(j) for j in i.strip().split(';')]
                      for i in f.readlines()))
 
     with open(path + 'BME.out', 'r') as f:
-        bme = filter(f, ([float(j) for j in i.strip().split(';')]
+        bme = filter(fun, ([float(j) for j in i.strip().split(';')]
                      for i in f.readlines()))
 
     # prepare intermediate data
@@ -260,12 +261,12 @@ def speeds(path='Data/raw_data', start_time=0, end_time=None):
 # acceleration
 
 
-def acceleration(path='Data/raw_data', start_time=0, end_time=None, start_val=-100):
+def acceleration(path='Data/raw_data/', start_time=0, end_time=None, start_val=-100):
 
     if end_time is not None:
-        def f(a): return a[0] > start_time
+        def fun(a): return a[0] > start_time
     else:
-        def f(a): return a[0] > start_time and a[0] < end_time
+        def fun(a): return a[0] > start_time and a[0] < end_time
 
     with open(path + 'LSM.out', 'r') as f:
         packets = filter(
