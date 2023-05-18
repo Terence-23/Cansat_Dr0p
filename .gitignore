@@ -4,12 +4,12 @@
 *.log
 **/bin
 **/logs
-.vscode
+*/.vscode
 **/out
 **.out
-.pio/build/**
-.pio/libdeps
-ground_station/target
+*/.pio/build/**
+*/.pio/libdeps
+**/target
 **/log.*
 **/*.h264
 **/*.mp4
