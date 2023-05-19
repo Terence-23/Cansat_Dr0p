@@ -15,7 +15,7 @@ import digitalio
 import adafruit_bme680
 from adafruit_onewire.bus import OneWireBus
 from adafruit_ds18x20 import DS18X20
-
+import movingavg
 SD_o: comms.SD
 PRESSUREHPA = 1013
 
@@ -116,17 +116,32 @@ class LSM303:
         return self.magvals
 
     def refresh(self):
+        
+        n = 20
+        x_avg = movingavg.MovingAvg(self.mag.magnetic[0], n, movingavg.MovingAvg.WEIGHTED_EXP)
+        y_avg = movingavg.MovingAvg(self.mag.magnetic[1], n, movingavg.MovingAvg.WEIGHTED_EXP)
+        z_avg = movingavg.MovingAvg(self.mag.magnetic[2], n, movingavg.MovingAvg.WEIGHTED_EXP)
+        avg_list = [x_avg, y_avg, z_avg]
+        
         while True:
             if self.accel.acceleration != self.acc:
                 self.acc = self.accel.acceleration
                 with open(self.path_acc, 'a')as f:
                     f.write(f'{time.time()};{";".join(map(str, self.acc))}\n')
 
+<<<<<<< HEAD
             if self.mag.magnetic != self.magvals:
                 self.magvals = self.mag.magnetic
                 with open(self.path_acc, 'a')as f:
                     f.write(
                         f'{time.time()};{";".join(map(str, self.magvals))}\n')
+=======
+            if self.accel.acceleration != self.acc[:] or self.mag.magnetic != self.magvals[:]:
+                self.acc.get_obj()[:] = self.accel.acceleration
+                self.magvals.get_obj()[:] = [a.next(v) for a, v in zip(avg_list, self.mag.magnetic)]
+                with open(self.log_path, 'a')as f:
+                    f.write(f'{time.time()};{";".join(map(str, self.acc[:]))};{";".join(map(str, self.magvals[:]))}\n')
+>>>>>>> eebaf96 (add denoising to sensor.py)
 
             time.sleep(0.009)
 
