@@ -11,9 +11,9 @@ import math
 import sys
 import haversine
 
-sys.path.append('..')
+sys.path.append('../Can')
 
-from Can.sensor import LSM303
+from sensor import LSM303
 
 
 def normalize(_magvals, hardiron_calibration):
@@ -47,7 +47,7 @@ def calc_pitch(_x, _y, _z):
 class Stepper:
     reverse = False
 
-    def __init__(self, steps_per_circle=200*108/19, delay=1,
+    def __init__(self, steps_per_circle=200*108/19, delay:float = 1,
                  en=digitalio.DigitalInOut(board.D18),
                  step_pin=digitalio.DigitalInOut(board.D4),
                  dir_pin=digitalio.DigitalInOut(board.D17)
@@ -181,6 +181,18 @@ class StepperH:
         self.coil_B_2_pin.value = w4
 
 
+while __name__ == '__main__':
+    user_delay = input("Delay between steps (milliseconds)?")
+    user_steps = input("How many steps forward? ")
+    stepper = Stepper()
+    stepper.delay = int(user_delay)/1000
+    stepper.forward(int(user_steps))
+    user_steps = input("How many steps backwards? ")
+    stepper.backwards(int(user_steps))
+if __name__ == '__main__':
+    sys.exit()
+
+
 class Aimbot:
     target_pos = Array('d', [90, 0])
     self_pos = (0, 0)
@@ -267,11 +279,3 @@ class Aimbot:
             
             
 
-while __name__ == '__main__':
-    user_delay = input("Delay between steps (milliseconds)?")
-    user_steps = input("How many steps forward? ")
-    stepper = Stepper()
-    stepper.delay = int(user_delay)
-    stepper.forward(int(user_steps))
-    user_steps = input("How many steps backwards? ")
-    stepper.backwards(int(user_steps))
