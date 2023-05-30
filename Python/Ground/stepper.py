@@ -25,9 +25,9 @@ def normalize(_magvals, hardiron_calibration):
     return ret
 
 
-def compass_reading(magnetometer_x, magnetometer_y, magnetometer_z):
+def compass_reading(_x, _y, _z):
 
-    yaw = -math.atan2(magnetometer_y, magnetometer_x)
+    yaw = math.atan2(_x, -_y)
 
     # Convert the yaw angle to degrees
     # yaw_degrees = math.degrees(yaw)
@@ -41,7 +41,7 @@ def compass_reading(magnetometer_x, magnetometer_y, magnetometer_z):
 def calc_pitch(_x, _y, _z):
     # assumes that x is forward y is right and z is down
     # angle between z axis and vector of acceleratrion
-    return math.atan2(_x, _z)
+    return math.atan2(_y, _z)
     
 
 class Stepper:
@@ -183,12 +183,10 @@ class StepperH:
 
 while __name__ == '__main__':
     user_delay = input("Delay between steps (milliseconds)?")
-    user_steps = input("How many steps forward? ")
-    stepper = Stepper()
-    stepper.delay = int(user_delay)/1000
-    stepper.forward(int(user_steps))
-    user_steps = input("How many steps backwards? ")
-    stepper.backwards(int(user_steps))
+    user_deg = int(input('enter number of degrees to rotate'))
+    stepper = Stepper(delay=int(user_delay)/1000)
+    stepper.rotate(math.radians(float(user_deg)))
+    
 if __name__ == '__main__':
     sys.exit()
 
