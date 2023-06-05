@@ -47,7 +47,7 @@ def calc_pitch(_x, _y, _z):
 class Stepper:
     reverse = False
 
-    def __init__(self, steps_per_circle=200*108/19, delay:float = 1,
+    def __init__(self, steps_per_circle=200*108/19, delay:float = 0.001,
                  en=digitalio.DigitalInOut(board.D18),
                  step_pin=digitalio.DigitalInOut(board.D4),
                  dir_pin=digitalio.DigitalInOut(board.D17)
@@ -225,7 +225,8 @@ class Aimbot:
         for _ in range(v_passes):
             self.v_motor.rotate(-math.pi/18)
 
-    def __init__(self, pos, h_motor=Stepper(), v_motor=Stepper(), lsm=LSM303()):
+    def __init__(self, pos, h_motor=Stepper(200 * 120 / 19), v_motor=Stepper(200 * 178 / 31, step_pin=digitalio.DigitalInOut(board.D14),
+                 dir_pin=digitalio.DigitalInOut(board.D18)), lsm=LSM303()):
         self.h_motor = h_motor
         self.v_motor = v_motor
         self.self_pos = pos

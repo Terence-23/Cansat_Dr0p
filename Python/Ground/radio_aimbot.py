@@ -129,7 +129,7 @@ def radio_recv():
     from stepper import Aimbot, Stepper
     
     pos = (0,0)
-    aimbot = Aimbot(pos, Stepper(delay = 0.004), Stepper(delay = 0.004, step_pin=digitalio.DigitalInOut(board.D14), dir_pin=digitalio.DigitalInOut(board.D18)))
+    aimbot = Aimbot(pos)
     
     while True:
         in_text = radio.recv()
@@ -140,7 +140,7 @@ def radio_recv():
                 if packet.packet_type == PacketType.BASE:
                     # packet.payload['temp'] -= 10
                     last_base = packet
-                    aimbot.alt_diff.value = last_base.payload['temp']                    
+                    aimbot.alt_diff.value = last_base.payload['altitude']                    
                     
                 elif packet.packet_type == PacketType.EXTENDED:
                     last_ext = packet                    
