@@ -185,7 +185,9 @@ while __name__ == '__main__':
     user_delay = input("Delay between steps (milliseconds)?")
     user_deg = int(input('enter number of degrees to rotate'))
     stepper = Stepper(delay=int(user_delay)/1000)
+    stepper2 = Stepper(delay=int(user_delay)/1000)
     stepper.rotate(math.radians(float(user_deg)))
+    stepper2.rotate(math.radians(float(user_deg)))
     
 if __name__ == '__main__':
     sys.exit()
@@ -229,11 +231,12 @@ class Aimbot:
                  dir_pin=digitalio.DigitalInOut(board.D18)), lsm=LSM303()):
         self.h_motor = h_motor
         self.v_motor = v_motor
+        self.lsm = lsm
         self.self_pos = pos
         self.calibrate()
         self.tracker = Process(target=self.track)
         self.tracker.start()
-        self.lsm = lsm
+        
 
     @staticmethod
     def calc_antenna_angle(ant_pos, goal_pos, goal_alt, degrees=True):
