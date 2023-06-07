@@ -130,7 +130,8 @@ def radio_recv():
     
     pos = (0,0)
     aimbot = Aimbot(pos)
-    
+    aimbot.v_motor.reverse = True
+
     while True:
         in_text = radio.recv()
         if in_text is not None:

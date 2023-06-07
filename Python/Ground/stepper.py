@@ -76,7 +76,7 @@ class Stepper:
         if degrees:
             angle = math.radians(angle)
 
-        steps_to_do = self.steps * angle // (2 * math.pi)
+        steps_to_do = int(self.steps * angle // (2 * math.pi))
 
         if self.reverse:
             steps_to_do *= -1
@@ -85,7 +85,7 @@ class Stepper:
             self.forward(steps_to_do)
 
         elif steps_to_do < 0:
-            self.backwards(steps_to_do)
+            self.backwards(-steps_to_do)
 
     def forward(self, steps):
         self.dir_pin.value = 0
@@ -185,7 +185,7 @@ while __name__ == '__main__':
     user_delay = input("Delay between steps (milliseconds)?")
     user_deg = int(input('enter number of degrees to rotate'))
     stepper = Stepper(delay=int(user_delay)/1000)
-    stepper2 = Stepper(delay=int(user_delay)/1000)
+    stepper2 = Stepper(delay=int(user_delay)/1000, step_pin = digitalio.DigitalInOut(board.D14), dir_pin = digitalio.DigitalInOut(board.D18))
     stepper.rotate(math.radians(float(user_deg)))
     stepper2.rotate(math.radians(float(user_deg)))
     
@@ -198,10 +198,11 @@ class Aimbot:
     self_pos = (0, 0)
     h_rot = Value('d',0)
     v_rot = Value('d',0)
-    alt_diff = Value('d', 0)
+    alt_diff = Value('d', 1e30)
     h_motor = Stepper()
     v_motor = Stepper()
     lsm: LSM303
+    e = math.radians(1)
 
     def calibrate(self):
         self.hardiron_calibration = [[0, 0], [0, 0], [0, 0]]
@@ -216,7 +217,7 @@ class Aimbot:
 
             for _ in range(steps_per_pass):
                 mf(1)
-                magval = self.lsm.magcals
+                magval = self.lsm.getMagnetic()
                 # print("Calibrating - X:{0:10.2f}, Y:{1:10.2f}, Z:{2:10.2f} uT".format(*magval))
                 for i, axis in enumerate(magval):
                     self.hardiron_calibration[i][0] = min(
@@ -261,13 +262,17 @@ class Aimbot:
             return alfa, beta
 
     def track(self):
+        #sys.exit()
         h_step_angle = self.h_motor.step_to_rad(1)
         v_step_angle = self.v_motor.step_to_rad(1)
         while True:
             alfa, beta = self.calc_antenna_angle(self.self_pos, self.target_pos[:], self.alt_diff.value, degrees=False)
+            beta = - beta
             heading = compass_reading(*normalize(self.lsm.getMagnetic(), self.hardiron_calibration))
             pitch = calc_pitch(*self.lsm.getAcceleration())
             h_rot = alfa - heading
+            print(pitch, beta)
+
             if h_rot - h_step_angle > 0:
                 self.h_motor.forward(1)
             elif h_rot + h_step_angle < 0:
