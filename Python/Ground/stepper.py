@@ -38,11 +38,12 @@ def compass_reading(_x, _y, _z):
     return yaw
 
 
-def calc_pitch(_x, _y, _z):
+def calc_pitch(_x, _y, _z, BOF):
     # assumes that x is forward y is right and z is down
     # angle between z axis and vector of acceleratrion
-    return math.atan2(_y, _z)
-    
+    #return math.atan2(_y, _z)
+    #angle between -y axis and vector of magnetic field atan2(Bz, -By) + BOF 
+    return math.atan2(_z, -_y) + BOF
 
 class Stepper:
     reverse = False
@@ -208,6 +209,7 @@ class Aimbot:
         self.hardiron_calibration = [[0, 0], [0, 0], [0, 0]]
         steps_per_pass = int(self.h_motor.steps)
         v_passes = 4
+        BOF = 0
         for p in range(v_passes):
 
             if p % 2:
@@ -225,8 +227,19 @@ class Aimbot:
                     self.hardiron_calibration[i][1] = max(
                         self.hardiron_calibration[i][1], axis)
             self.v_motor.rotate(math.pi/18)
+            
+            time.sleep(1)
+            _, Fy, Fz = self.lsm.getAcceleration()
+            _, By, Bz = self.lsm.getMagnetic()
+            BOF += math.atan2(Fy, Fz) - math.atan2(Bz, -By)
+            time.sleep(1)
+            _, Fy, Fz = self.lsm.getAcceleration()
+            _, By, Bz = self.lsm.getMagnetic()
+            BOF += math.atan2(Fy, Fz) - math.atan2(Bz, -By)
+        
         for _ in range(v_passes):
             self.v_motor.rotate(-math.pi/18)
+        self.BOF = BOF
 
     def __init__(self, pos, h_motor=Stepper(200 * 120 / 19), v_motor=Stepper(200 * 178 / 31, step_pin=digitalio.DigitalInOut(board.D14),
                  dir_pin=digitalio.DigitalInOut(board.D18)), lsm=LSM303()):
@@ -269,7 +282,7 @@ class Aimbot:
             alfa, beta = self.calc_antenna_angle(self.self_pos, self.target_pos[:], self.alt_diff.value, degrees=False)
             beta = - beta
             heading = compass_reading(*normalize(self.lsm.getMagnetic(), self.hardiron_calibration))
-            pitch = calc_pitch(*self.lsm.getAcceleration())
+            pitch = calc_pitch(*self.lsm.getAcceleration(), BOF=self.BOF)
             h_rot = alfa - heading
             print(pitch, beta)
 
