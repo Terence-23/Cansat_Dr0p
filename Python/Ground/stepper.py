@@ -15,6 +15,13 @@ sys.path.append('../Can')
 
 from sensor import LSM303
 
+def dot_product(v1, v2):
+    if len(v1) != len(v2): return 00
+    return sum((i*j for i,j in zip(v1, v2)))
+
+def vec_len(v):
+    return math.sqrt(sum(i * i for i in v))
+
 
 def normalize(_magvals, hardiron_calibration):
     ret = [0, 0, 0]
@@ -43,7 +50,11 @@ def calc_pitch(_x, _y, _z, BOF):
     # angle between z axis and vector of acceleratrion
     #return math.atan2(_y, _z)
     #angle between -y axis and vector of magnetic field atan2(Bz, -By) + BOF 
-    return math.atan2(_z, -_y) + BOF
+    ang = math.atan2(_z, -_y) - BOF
+    while ang > math.pi: ang -=math.pi * 2
+    while ang < -math.pi: ang +=math.pi * 2
+
+    return ang 
 
 class Stepper:
     reverse = False
@@ -208,7 +219,7 @@ class Aimbot:
     def calibrate(self):
         self.hardiron_calibration = [[0, 0], [0, 0], [0, 0]]
         steps_per_pass = int(self.h_motor.steps)
-        v_passes = 4
+        v_passes = 8
         BOF = 0
         for p in range(v_passes):
 
@@ -227,19 +238,24 @@ class Aimbot:
                     self.hardiron_calibration[i][1] = max(
                         self.hardiron_calibration[i][1], axis)
             self.v_motor.rotate(math.pi/18)
+           
+
+
+        for p in range(v_passes):
+            time.sleep(1)
+            _, Fy, Fz = self.lsm.getAcceleration()
+            _, By, Bz = normalize(self.lsm.getMagnetic(), self.hardiron_calibration)
+            BOF += math.acos(dot_product([Fy, Fz], [By, Bz]) / (vec_len([Fy, Fz]) * vec_len([By, Bz])))
             
-            time.sleep(1)
-            _, Fy, Fz = self.lsm.getAcceleration()
-            _, By, Bz = self.lsm.getMagnetic()
-            BOF += math.atan2(Fy, Fz) - math.atan2(Bz, -By)
-            time.sleep(1)
-            _, Fy, Fz = self.lsm.getAcceleration()
-            _, By, Bz = self.lsm.getMagnetic()
-            BOF += math.atan2(Fy, Fz) - math.atan2(Bz, -By)
-        
-        for _ in range(v_passes):
+            print(f"B = [{By}, {Bz}], F=[{Fy}, {Fz}]")
+
             self.v_motor.rotate(-math.pi/18)
-        self.BOF = BOF
+        self.BOF = BOF / (v_passes) -math.radians(90)
+        while self.BOF < -math.pi: self.BOF +=2*math.pi
+        while self.BOF > math.pi: self.BOF -=2*math.pi
+        print(self.BOF)
+        self.BOF = 0
+        #sys.exit()
 
     def __init__(self, pos, h_motor=Stepper(200 * 120 / 19), v_motor=Stepper(200 * 178 / 31, step_pin=digitalio.DigitalInOut(board.D14),
                  dir_pin=digitalio.DigitalInOut(board.D18)), lsm=LSM303()):
@@ -248,6 +264,7 @@ class Aimbot:
         self.lsm = lsm
         self.self_pos = pos
         self.calibrate()
+        input("cut the power")
         self.tracker = Process(target=self.track)
         self.tracker.start()
         
@@ -280,11 +297,11 @@ class Aimbot:
         v_step_angle = self.v_motor.step_to_rad(1)
         while True:
             alfa, beta = self.calc_antenna_angle(self.self_pos, self.target_pos[:], self.alt_diff.value, degrees=False)
-            beta = - beta
+            beta = beta
             heading = compass_reading(*normalize(self.lsm.getMagnetic(), self.hardiron_calibration))
-            pitch = calc_pitch(*self.lsm.getAcceleration(), BOF=self.BOF)
+            pitch = calc_pitch(*self.lsm.getMagnetic(), BOF=self.BOF)
             h_rot = alfa - heading
-            print(pitch, beta)
+            print(pitch, beta, self.BOF)
 
             if h_rot - h_step_angle > 0:
                 self.h_motor.forward(1)
