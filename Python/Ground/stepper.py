@@ -360,6 +360,7 @@ else:
                             self.hardiron_calibration[i][1], axis)
             
             self.heading = compass_reading(*normalize(self.lsm.getMagnetic(), self.hardiron_calibration))
+            print(self.heading)
             
 
         def __init__(self, pos, h_motor=Stepper(200 * 120 / 19), v_motor=Stepper(200 * 178 / 31, step_pin=digitalio.DigitalInOut(board.D14),
