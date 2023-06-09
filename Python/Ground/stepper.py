@@ -16,7 +16,7 @@ sys.path.append('../Can')
 from sensor import LSM303
 
 def dot_product(v1, v2):
-    if len(v1) != len(v2): return 00
+    if len(v1) != len(v2): return 0
     return sum((i*j for i,j in zip(v1, v2)))
 
 def vec_len(v):
@@ -41,7 +41,7 @@ def compass_reading(_x, _y, _z):
 
     # Normalize the compass reading to a range of 0-360 degrees
     # compass_reading = (yaw_degrees + 450) % 360
-    ang += math.radians(30)
+    ang += math.radians(25)
     while ang > math.pi: ang -=math.pi * 2
     while ang < -math.pi: ang +=math.pi * 2
     
