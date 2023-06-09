@@ -196,10 +196,13 @@ class StepperH:
 while __name__ == '__main__':
     user_delay = input("Delay between steps (milliseconds)?")
     user_deg = int(input('enter number of degrees to rotate'))
+    print(calc_pitch(lsm.getAcceleration()))
     stepper = Stepper(delay=int(user_delay)/1000)
     stepper2 = Stepper(delay=int(user_delay)/1000, step_pin = digitalio.DigitalInOut(board.D14), dir_pin = digitalio.DigitalInOut(board.D18))
     stepper.rotate(math.radians(float(user_deg)))
     stepper2.rotate(math.radians(float(user_deg)))
+    lsm = LSM303()
+    print(calc_pitch(lsm.getAcceleration()))
     
 if __name__ == '__main__':
     sys.exit()
