@@ -45,7 +45,7 @@ def compass_reading(_x, _y, _z):
     return yaw
 
 
-def calc_pitch(_x, _y, _z, BOF):
+def calc_pitch(_x, _y, _z, BOF=0):
     # assumes that x is forward y is right and z is down
     # angle between z axis and vector of acceleratrion
     return math.atan2(_y, _z)
