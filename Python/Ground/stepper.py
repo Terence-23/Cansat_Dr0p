@@ -34,15 +34,18 @@ def normalize(_magvals, hardiron_calibration):
 
 def compass_reading(_x, _y, _z):
 
-    yaw = -math.atan2(_x, -_y)
+    ang = -math.atan2(_x, -_y)
 
     # Convert the yaw angle to degrees
     # yaw_degrees = math.degrees(yaw)
 
     # Normalize the compass reading to a range of 0-360 degrees
     # compass_reading = (yaw_degrees + 450) % 360
-
-    return yaw
+    ang += math.radians(30)
+    while ang > math.pi: ang -=math.pi * 2
+    while ang < -math.pi: ang +=math.pi * 2
+    
+    return ang
 
 
 def calc_pitch(_x, _y, _z, BOF=0):
