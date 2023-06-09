@@ -198,13 +198,13 @@ while __name__ == '__main__':
     user_deg = int(input('enter number of degrees to rotate'))
     
     lsm = LSM303()
-    print(calc_pitch(lsm.getAcceleration()))
+    print(calc_pitch(*lsm.getAcceleration()))
     stepper = Stepper(delay=int(user_delay)/1000)
     stepper2 = Stepper(delay=int(user_delay)/1000, step_pin = digitalio.DigitalInOut(board.D14), dir_pin = digitalio.DigitalInOut(board.D18))
     stepper.rotate(math.radians(float(user_deg)))
     stepper2.rotate(math.radians(float(user_deg)))
     time.sleep(1)
-    print(calc_pitch(lsm.getAcceleration()))
+    print(calc_pitch(*lsm.getAcceleration()))
     
 if __name__ == '__main__':
     sys.exit()
