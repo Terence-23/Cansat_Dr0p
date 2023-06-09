@@ -412,7 +412,7 @@ else:
                 alfa, beta = self.calc_antenna_angle(self.self_pos, self.target_pos[:], self.alt_diff.value, degrees=False)
                 beta = beta
                 self.BOF = 0
-                print(self.pitch, beta, self.BOF)
+                print(f"pitch= {self.pitch}, beta= {beta},  v_rot= {beta - self.pitch}")
 
                 h_rot = alfa - self.heading
                 if h_rot - h_step_angle > 0:
