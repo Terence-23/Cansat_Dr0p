@@ -376,7 +376,7 @@ else:
             compass = input("cut the power for compass write c")
             if compass.lower() == 'c':
                 while True:
-                    print(compass_reading(*normalize(self.lsm.getMagnetic(), self.hardiron_calibration)))
+                    print(calc_pitch(*self.lsm.getAcceleration()))
                     time.sleep(0.2)
             self.tracker = Process(target=self.track)
             self.tracker.start()
