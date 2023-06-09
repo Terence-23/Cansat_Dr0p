@@ -215,7 +215,7 @@ if __name__ == '__main__':
 mag_aim = False
 if mag_aim:
     class Aimbot:
-        target_pos = Array('d', [0, 90])
+        target_pos = Array('d', [0, -90])
         self_pos = (0, 0)
         h_rot = Value('d',0)
         v_rot = Value('d',0)
@@ -325,7 +325,7 @@ if mag_aim:
                 
 else:                
     class Aimbot:
-        target_pos = Array('d', [0, 90])
+        target_pos = Array('d', [0, -90])
         self_pos = (0, 0)
         h_rot = Value('d',0)
         v_rot = Value('d',0)
