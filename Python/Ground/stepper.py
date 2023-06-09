@@ -371,7 +371,7 @@ else:
             self.self_pos = pos
             self.calibrate()
             compass = input("cut the power for compass write c")
-            if compass.toLower() == 'c':
+            if compass.lower() == 'c':
                 while True:
                     print(compass_reading(*normalize(self.lsm.getMagnetic(), self.hardiron_calibration)))
                     time.sleep(0.2)
