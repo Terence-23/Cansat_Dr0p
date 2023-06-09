@@ -41,7 +41,7 @@ def compass_reading(_x, _y, _z):
 
     # Normalize the compass reading to a range of 0-360 degrees
     # compass_reading = (yaw_degrees + 450) % 360
-    ang += math.radians(25)
+    # ang += math.radians(25)
     while ang > math.pi: ang -=math.pi * 2
     while ang < -math.pi: ang +=math.pi * 2
     
