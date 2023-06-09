@@ -51,7 +51,7 @@ def compass_reading(_x, _y, _z):
 def calc_pitch(_x, _y, _z, BOF=0):
     # assumes that x is forward y is right and z is down
     # angle between z axis and vector of acceleratrion
-    return -math.atan2(-_z, -_y)
+    return -math.atan2( -_y,-_z)
     #angle between -y axis and vector of magnetic field atan2(Bz, -By) + BOF 
     ang = math.atan2(_z, -_y) - BOF
     while ang > math.pi: ang -=math.pi * 2
