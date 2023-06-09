@@ -422,10 +422,10 @@ else:
                     self.heading -= h_step_angle
                     self.h_motor.backwards(1)
                 
-                v_rot = beta - self.pitch
-                if v_rot - v_step_angle > 0:
-                    self.pitch += v_step_angle
-                    self.v_motor.backwards(1)#forward(1)
-                elif v_rot + v_step_angle < 0:
-                    self.v_motor.forward(1)#backwards(1)
-                    self.pitch -= v_step_angle  
+#                 v_rot = beta - self.pitch
+#                 if v_rot - v_step_angle > 0:
+#                     self.pitch += v_step_angle
+#                     self.v_motor.backwards(1)#forward(1)
+#                 elif v_rot + v_step_angle < 0:
+#                     self.v_motor.forward(1)#backwards(1)
+#                     self.pitch -= v_step_angle  
