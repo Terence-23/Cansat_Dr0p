@@ -325,11 +325,11 @@ if mag_aim:
                 
 else:                
     class Aimbot:
-        target_pos = Array('d', [90, 0])
+        target_pos = Array('d', [0, 90])
         self_pos = (0, 0)
         h_rot = Value('d',0)
         v_rot = Value('d',0)
-        alt_diff = Value('d', 1e30)
+        alt_diff = Value('d', 1e6)
         h_motor = Stepper()
         v_motor = Stepper()
         lsm: LSM303
