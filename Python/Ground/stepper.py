@@ -227,8 +227,8 @@ if mag_aim:
 
         def calibrate(self):
             self.hardiron_calibration = [[0, 0], [0, 0], [0, 0]]
-            steps_per_pass = int(self.h_motor.steps)
-            v_passes = 8
+            steps_per_pass = int(self.h_motor.steps+1)
+            v_passes = 16
             BOF = 0
             for p in range(v_passes):
 
