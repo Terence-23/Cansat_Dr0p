@@ -370,7 +370,11 @@ else:
             self.lsm = lsm
             self.self_pos = pos
             self.calibrate()
-            input("cut the power")
+            compass = input("cut the power for compass write c")
+            if compass.toLower() == 'c':
+                while True:
+                    print(compass_reading(*normalize(self.lsm.getMagnetic(), self.hardiron_calibration)))
+                    time.sleep(0.2)
             self.tracker = Process(target=self.track)
             self.tracker.start()
             
