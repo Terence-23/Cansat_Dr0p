@@ -48,7 +48,7 @@ def compass_reading(_x, _y, _z):
 def calc_pitch(_x, _y, _z, BOF):
     # assumes that x is forward y is right and z is down
     # angle between z axis and vector of acceleratrion
-    #return math.atan2(_y, _z)
+    return math.atan2(_y, _z)
     #angle between -y axis and vector of magnetic field atan2(Bz, -By) + BOF 
     ang = math.atan2(_z, -_y) - BOF
     while ang > math.pi: ang -=math.pi * 2
@@ -329,8 +329,9 @@ else:
 
         def calibrate(self):
             
-            self.v_motor.rotate(-90, degrees=True)
-            self.pitch = 0          
+#             self.v_motor.rotate(-90, degrees=True)
+#             self.pitch = 0          
+            self.pitch = calc_pitch(lsm.getAcceleration())
             
             self.hardiron_calibration = [[0, 0], [0, 0], [0, 0]]
             passes = 8
