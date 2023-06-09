@@ -411,6 +411,7 @@ else:
             while True:
                 alfa, beta = self.calc_antenna_angle(self.self_pos, self.target_pos[:], self.alt_diff.value, degrees=False)
                 beta = beta
+                self.BOF = 0
                 print(self.pitch, beta, self.BOF)
 
                 h_rot = alfa - self.heading
