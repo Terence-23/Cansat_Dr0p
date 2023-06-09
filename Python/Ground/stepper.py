@@ -34,7 +34,7 @@ def normalize(_magvals, hardiron_calibration):
 
 def compass_reading(_x, _y, _z):
 
-    yaw = math.atan2(_x, -_y)
+    yaw = -math.atan2(_x, -_y)
 
     # Convert the yaw angle to degrees
     # yaw_degrees = math.degrees(yaw)
