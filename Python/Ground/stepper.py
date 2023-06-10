@@ -116,7 +116,7 @@ class Stepper:
         delay = self.delay
         for _ in range(steps):
             self.step_pin.value = 1
-            time.sleep(delay)time.sleep(0.5)
+            time.sleep(delay)
             self.step_pin.value = 0
             time.sleep(delay)
 
