@@ -87,7 +87,7 @@ isturning = False
 def main():
     global isturning
     # init
-    sleeping = Value('i', 0)
+    sleeping = Value('i', 1)
     # turn_delay = 1
     wake_cycle = 0.5 # seconds
     # last_rotate = time.time() - turn_delay
@@ -136,7 +136,7 @@ def main():
         print(runCount.value)
         # send basic packet
         packet_b = Packet.create_base_packet(
-            time.time(), dallas.temp, bme.getPress(), bme.getHum(), bme.getAltitude())
+            time.time(), dallas.temp.value, bme.getPress(), bme.getHum(), bme.getAltitude())
 
         comms.SD_o.write(comms.FL_PACKET, packet_b.to_json())
         print(packet_b.to_json())

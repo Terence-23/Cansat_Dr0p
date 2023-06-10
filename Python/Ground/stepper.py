@@ -16,7 +16,7 @@ sys.path.append('../Can')
 from sensor import LSM303
 
 def dot_product(v1, v2):
-    if len(v1) != len(v2): return 00
+    if len(v1) != len(v2): return 0
     return sum((i*j for i,j in zip(v1, v2)))
 
 def vec_len(v):
@@ -34,21 +34,24 @@ def normalize(_magvals, hardiron_calibration):
 
 def compass_reading(_x, _y, _z):
 
-    yaw = math.atan2(_x, -_y)
+    ang = -math.atan2(_x, -_y)
 
     # Convert the yaw angle to degrees
     # yaw_degrees = math.degrees(yaw)
 
     # Normalize the compass reading to a range of 0-360 degrees
     # compass_reading = (yaw_degrees + 450) % 360
+    # ang += math.radians(25)
+    while ang > math.pi: ang -=math.pi * 2
+    while ang < -math.pi: ang +=math.pi * 2
+    
+    return ang
 
-    return yaw
 
-
-def calc_pitch(_x, _y, _z, BOF):
+def calc_pitch(_x, _y, _z, BOF=0):
     # assumes that x is forward y is right and z is down
     # angle between z axis and vector of acceleratrion
-    #return math.atan2(_y, _z)
+    return math.atan2(-_y,_z)
     #angle between -y axis and vector of magnetic field atan2(Bz, -By) + BOF 
     ang = math.atan2(_z, -_y) - BOF
     while ang > math.pi: ang -=math.pi * 2
@@ -196,10 +199,15 @@ class StepperH:
 while __name__ == '__main__':
     user_delay = input("Delay between steps (milliseconds)?")
     user_deg = int(input('enter number of degrees to rotate'))
+    
+    lsm = LSM303()
+    print(calc_pitch(*lsm.getAcceleration()))
     stepper = Stepper(delay=int(user_delay)/1000)
-    stepper2 = Stepper(delay=int(user_delay)/1000, step_pin = digitalio.DigitalInOut(board.D14), dir_pin = digitalio.DigitalInOut(board.D18))
+    stepper2 = Stepper(steps_per_circle=200*168/19, delay=int(user_delay)/1000, step_pin = digitalio.DigitalInOut(board.D14), dir_pin = digitalio.DigitalInOut(board.D18))
     stepper.rotate(math.radians(float(user_deg)))
     stepper2.rotate(math.radians(float(user_deg)))
+    time.sleep(1)
+    print(calc_pitch(*lsm.getAcceleration()))
     
 if __name__ == '__main__':
     sys.exit()
@@ -207,11 +215,11 @@ if __name__ == '__main__':
 mag_aim = False
 if mag_aim:
     class Aimbot:
-        target_pos = Array('d', [90, 0])
+        target_pos = Array('d', [0, -90])
         self_pos = (0, 0)
         h_rot = Value('d',0)
         v_rot = Value('d',0)
-        alt_diff = Value('d', 1e30)
+        alt_diff = Value('d', 1e4)
         h_motor = Stepper()
         v_motor = Stepper()
         lsm: LSM303
@@ -219,8 +227,8 @@ if mag_aim:
 
         def calibrate(self):
             self.hardiron_calibration = [[0, 0], [0, 0], [0, 0]]
-            steps_per_pass = int(self.h_motor.steps)
-            v_passes = 8
+            steps_per_pass = int(self.h_motor.steps+1)
+            v_passes = 16
             BOF = 0
             for p in range(v_passes):
 
@@ -317,11 +325,11 @@ if mag_aim:
                 
 else:                
     class Aimbot:
-        target_pos = Array('d', [90, 0])
+        target_pos = Array('d', [0, -90])
         self_pos = (0, 0)
         h_rot = Value('d',0)
         v_rot = Value('d',0)
-        alt_diff = Value('d', 1e30)
+        alt_diff = Value('d', 1e46)
         h_motor = Stepper()
         v_motor = Stepper()
         lsm: LSM303
@@ -329,8 +337,17 @@ else:
 
         def calibrate(self):
             
-            self.v_motor.rotate(-90, degrees=True)
-            self.pitch = 0          
+#             self.v_motor.rotate(-90, degrees=True)
+#             self.pitch = 0          
+            time.sleep(0.5)
+            self.pitch = calc_pitch(*self.lsm.getAcceleration())
+            print(f"pitch: {self.pitch}\nAccel: {self.lsm.getAcceleration()}")
+    
+            while input().lower()!='c':
+                time.sleep(0.5)
+                self.pitch = calc_pitch(*self.lsm.getAcceleration())
+                print(f"pitch: {self.pitch}\nAccel: {self.lsm.getAcceleration()}")
+                
             
             self.hardiron_calibration = [[0, 0], [0, 0], [0, 0]]
             passes = 8
@@ -354,6 +371,7 @@ else:
                             self.hardiron_calibration[i][1], axis)
             
             self.heading = compass_reading(*normalize(self.lsm.getMagnetic(), self.hardiron_calibration))
+            print(self.pitch)
             
 
         def __init__(self, pos, h_motor=Stepper(200 * 120 / 19), v_motor=Stepper(200 * 178 / 31, step_pin=digitalio.DigitalInOut(board.D14),
@@ -363,7 +381,11 @@ else:
             self.lsm = lsm
             self.self_pos = pos
             self.calibrate()
-            input("cut the power")
+            compass = input("cut the power for compass write c")
+            if compass.lower() == 'c':
+                while True:
+                    print(math.degrees(calc_pitch(*self.lsm.getAcceleration())))
+                    time.sleep(0.2)
             self.tracker = Process(target=self.track)
             self.tracker.start()
             
@@ -397,7 +419,8 @@ else:
             while True:
                 alfa, beta = self.calc_antenna_angle(self.self_pos, self.target_pos[:], self.alt_diff.value, degrees=False)
                 beta = beta
-                print(self.pitch, beta, self.BOF)
+                self.BOF = 0
+                print(f"pitch= {self.pitch}, beta= {beta},  v_rot= {beta - self.pitch}")
 
                 h_rot = alfa - self.heading
                 if h_rot - h_step_angle > 0:
@@ -410,7 +433,7 @@ else:
                 v_rot = beta - self.pitch
                 if v_rot - v_step_angle > 0:
                     self.pitch += v_step_angle
-                    self.v_motor.forward(1)
+                    self.v_motor.forward(1)#backwards(1)#
                 elif v_rot + v_step_angle < 0:
-                    self.v_motor.backwards(1)
+                    self.v_motor.backwards(1)#forward(1)#
                     self.pitch -= v_step_angle  
