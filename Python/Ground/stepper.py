@@ -76,7 +76,7 @@ class Stepper:
 
         self.enable_pin.direction = digitalio.Direction.OUTPUT
         self.step_pin.direction = digitalio.Direction.OUTPUT
-        self.dir_pin.direction = digitalio.Direction.OUTPUTtime.sleep(0.5)
+        self.dir_pin.direction = digitalio.Direction.OUTPUT
 
         self.enable_pin.value = False
 
@@ -139,7 +139,7 @@ class StepperH:
         self.coil_B_1_pin = B1
         self.coil_B_2_pin = B2
 
-        self.enable_pin.direction = digitalio.Direction.OUTPUTtime.sleep(0.5)
+        self.enable_pin.direction = digitalio.Direction.OUTPUT
         self.coil_A_1_pin.direction = digitalio.Direction.OUTPUT
         self.coil_A_2_pin.direction = digitalio.Direction.OUTPUT
         self.coil_B_1_pin.direction = digitalio.Direction.OUTPUT
