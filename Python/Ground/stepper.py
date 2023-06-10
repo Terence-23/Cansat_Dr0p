@@ -340,6 +340,11 @@ else:
 #             self.v_motor.rotate(-90, degrees=True)
 #             self.pitch = 0          
             self.pitch = calc_pitch(*self.lsm.getAcceleration())
+    
+            while input().lower()!='c':
+                time.sleep(0.5)
+                self.pitch = calc_pitch(*self.lsm.getAcceleration())
+                
             
             self.hardiron_calibration = [[0, 0], [0, 0], [0, 0]]
             passes = 8
