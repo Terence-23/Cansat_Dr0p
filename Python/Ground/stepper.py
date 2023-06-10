@@ -339,6 +339,7 @@ else:
             
 #             self.v_motor.rotate(-90, degrees=True)
 #             self.pitch = 0          
+            time.sleep(0.02)
             self.pitch = calc_pitch(*self.lsm.getAcceleration())
             print(f"pitch: {self.pitch}\nAccel: {self.lsm.getAcceleration()}")
     
