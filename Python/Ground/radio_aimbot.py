@@ -126,7 +126,7 @@ def radio_recv():
     last_ext = Packet.create_extended_packet(0,0,0,0,0,0,0,0,0)
     from stepper import Aimbot, Stepper
     radio = comms.Radio(freq=comms.FREQ)
-    radio.send("b;0;0;0;0;0"
+    radio.send("b;0;0;0;0;0")
     
     pos = (0,0)
     aimbot = Aimbot(pos)
