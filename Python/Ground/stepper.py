@@ -329,7 +329,7 @@ else:
         self_pos = (0, 0)
         h_rot = Value('d',0)
         v_rot = Value('d',0)
-        alt_diff = Value('d', 1e6)
+        alt_diff = Value('d', 1e46)
         h_motor = Stepper()
         v_motor = Stepper()
         lsm: LSM303
