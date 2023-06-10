@@ -242,7 +242,7 @@ def main():
         # send basic packet
         comms.SD_o.write(comms.FL_DEBUG, f"alt: {bme.getAltitude()}, sea: {bme.getSeaLevelPressure()}")
         packet_b = Packet.create_base_packet(
-            time.time(), dallas.temp, bme.getPress(), bme.getHum(), bme.getAltitude())
+            time.time(), dallas.temp.value, bme.getPress(), bme.getHum(), bme.getAltitude())
 
         comms.SD_o.write(comms.FL_PACKET, packet_b.to_json())
         print(packet_b.to_json())
