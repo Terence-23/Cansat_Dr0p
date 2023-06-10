@@ -29,8 +29,6 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
 with open('cal_data') as f:
     hardiron_calibration = l_eval(f.readline())
 
-radio = comms.Radio(freq=comms.FREQ)
-
 def wait_for_udp():
     sock.bind((UDP_LOCAL_IP, UDP_LOCAL_PORT))
     bufferSize = 1024
@@ -127,6 +125,8 @@ def radio_recv():
     last_base = Packet.create_base_packet(0,0,0,0,0)
     last_ext = Packet.create_extended_packet(0,0,0,0,0,0,0,0,0)
     from stepper import Aimbot, Stepper
+    radio = comms.Radio(freq=comms.FREQ)
+    radio.send("b;0;0;0;0;0"
     
     pos = (0,0)
     aimbot = Aimbot(pos)
