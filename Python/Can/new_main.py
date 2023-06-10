@@ -87,7 +87,7 @@ isturning = False
 def main():
     global isturning
     # init
-    sleeping = Value('i', 0)
+    sleeping = Value('i', 1)
     # turn_delay = 1
     wake_cycle = 0.5 # seconds
     # last_rotate = time.time() - turn_delay
