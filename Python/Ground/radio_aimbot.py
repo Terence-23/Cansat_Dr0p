@@ -152,6 +152,7 @@ def radio_recv():
                     (last_ext.payload['magnetometer_x'], last_ext.payload['magnetometer_y'], last_ext.payload['magnetometer_z']) ,hardiron_calibration))
                 
                 studio_frame = f"${last_base.encode()[2:]};{';'.join(last_ext.encode().split(';')[2:-3])};{compass};{radio.rfm9x.last_rssi}*\n"
+                print(f"studio_frame: {studio_frame}")
                 for ip in UDPIPS:
                     sock.sendto(bytes(studio_frame, 'utf-8'),(ip, UDP_PORT))
                 
