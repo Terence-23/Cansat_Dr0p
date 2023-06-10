@@ -76,7 +76,7 @@ class Stepper:
 
         self.enable_pin.direction = digitalio.Direction.OUTPUT
         self.step_pin.direction = digitalio.Direction.OUTPUT
-        self.dir_pin.direction = digitalio.Direction.OUTPUT
+        self.dir_pin.direction = digitalio.Direction.OUTPUTtime.sleep(0.5)
 
         self.enable_pin.value = False
 
@@ -116,7 +116,7 @@ class Stepper:
         delay = self.delay
         for _ in range(steps):
             self.step_pin.value = 1
-            time.sleep(delay)
+            time.sleep(delay)time.sleep(0.5)
             self.step_pin.value = 0
             time.sleep(delay)
 
@@ -139,7 +139,7 @@ class StepperH:
         self.coil_B_1_pin = B1
         self.coil_B_2_pin = B2
 
-        self.enable_pin.direction = digitalio.Direction.OUTPUT
+        self.enable_pin.direction = digitalio.Direction.OUTPUTtime.sleep(0.5)
         self.coil_A_1_pin.direction = digitalio.Direction.OUTPUT
         self.coil_A_2_pin.direction = digitalio.Direction.OUTPUT
         self.coil_B_1_pin.direction = digitalio.Direction.OUTPUT
@@ -339,7 +339,7 @@ else:
             
 #             self.v_motor.rotate(-90, degrees=True)
 #             self.pitch = 0          
-            time.sleep(0.02)
+            time.sleep(0.5)
             self.pitch = calc_pitch(*self.lsm.getAcceleration())
             print(f"pitch: {self.pitch}\nAccel: {self.lsm.getAcceleration()}")
     
