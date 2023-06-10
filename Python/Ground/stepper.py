@@ -433,7 +433,7 @@ else:
                 v_rot = beta - self.pitch
                 if v_rot - v_step_angle > 0:
                     self.pitch += v_step_angle
-                    self.v_motor.backwards(1)#forward(1)
+                    self.v_motor.forward(1)#backwards(1)#
                 elif v_rot + v_step_angle < 0:
-                    self.v_motor.forward(1)#backwards(1)
-#                     self.pitch -= v_step_angle  
+                    self.v_motor.backwards(1)#forward(1)#
+                    self.pitch -= v_step_angle  
