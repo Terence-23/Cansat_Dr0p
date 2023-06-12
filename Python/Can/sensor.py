@@ -37,12 +37,23 @@ class BME:
         else:
             self.sensor = adafruit_bme680.Adafruit_BME680_SPI(spi, cs)
 
-        self.sensor.sea_level_pressure = self.sensor.pressure
+        with open('press.out', 'w') as f:
+            f.write(str(self.sensor.pressure) + '\n')
+            self.sensor.sea_level_pressure = self.sensor.pressure
+            f.write(str(self.sensor.sea_level_pressure) + '\n')
         self.sensor.pressure_oversample = 8
         self.rProcess = Process(target=self.refresh)
         self.rProcess.start()
 
     def refresh(self):
+        while self.sensor.pressure < 980 or self.sensor.pressure > 1100:
+            time.sleep(1)
+        
+        with open('press.out', 'w') as f:
+            f.write(str(self.sensor.pressure) + '\n')
+            self.sensor.sea_level_pressure = self.sensor.pressure
+            f.write(str(self.sensor.sea_level_pressure) + '\n')
+
         while True:
             if self.temp.value != self.sensor.temperature or\
                 self.press.value != self.sensor.pressure or\

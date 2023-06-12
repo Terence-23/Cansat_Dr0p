@@ -101,7 +101,7 @@ def main():
     gpsFix = Value('i', 0)
     runCount = Value('i', 0)
 
-    desiredPos = Value('d', 52.2175879), Value('d',21.0393806)
+    desiredPos = Value('d', 52.2449603), Value('d',21.8641596)
 
     dallas = sensor.Dallas()
     lsm = sensor.LSM303()
@@ -135,6 +135,7 @@ def main():
     while 1:
         print(runCount.value)
         # send basic packet
+        comms.SD_o.write(comms.FL_DEBUG, f"alt: {bme.getAltitude()}, sea: {bme.getSeaLevelPressure()}")
         packet_b = Packet.create_base_packet(
             time.time(), dallas.temp.value, bme.getPress(), bme.getHum(), bme.getAltitude())
 
