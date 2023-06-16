@@ -82,7 +82,7 @@ def compass_reading(magnetometer_x, magnetometer_y, magnetometer_z):
     yaw_degrees = math.degrees(yaw)
 
     # Normalize the compass reading to a range of 0-360 degrees
-    compass_reading = (yaw_degrees + 630) % 360
+    compass_reading = (yaw_degrees + 720) % 360
 
     return compass_reading
 
