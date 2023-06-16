@@ -211,7 +211,7 @@ def main():
     gpsFix = Value('i', 0)
     runCount = Value('i', 0)
 
-    desiredPos = Value('d', 52.2449603), Value('d',21.8641596))
+    desiredPos = Value('d',52.2449603), Value('d',21.8641596)
 
     dallas = sensor.Dallas()
     lsm = sensor.LSM303()
