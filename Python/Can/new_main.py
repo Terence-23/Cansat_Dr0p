@@ -91,9 +91,9 @@ def get_rotation(point1, point2):
     x1, y1 = point1
     x2, y2 = point2
 
-    if x2.isinstance(Value):
+    if isinstance(x2, Value):
         x2 = x2.value
-    if y2.isinstance(Value):
+    if isinstance(y2, Value):
         y2 = y2.value
 
     # Calculate the difference between the points
