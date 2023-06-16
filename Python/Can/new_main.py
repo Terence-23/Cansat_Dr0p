@@ -335,6 +335,7 @@ def main():
 
             mag_corected = normalize(
                 np.array(lsm.getMagnetic()), hardiron_calibration)
+            print(mag_corected)
             compass = compass_reading(*mag_corected)
             rotation = get_rotation((lat.value, lon.value), desiredPos)
             rotation_to_do = get_rotation_difference(compass, rotation)
