@@ -90,11 +90,8 @@ def compass_reading(magnetometer_x, magnetometer_y, magnetometer_z):
 def get_rotation(point1, point2):
     x1, y1 = point1
     x2, y2 = point2
-
-    if isinstance(x2, Synchronized):
-        x2 = x2.value
-    if isinstance(y2, Synchronized):
-        y2 = y2.value
+    x2 = x2.value
+    y2 = y2.value
 
     # Calculate the difference between the points
     dx = x2 - x1
