@@ -1,0 +1,3 @@
+[console_scripts]
+py3ps4c = pyPS4Controller.__main__:main
+
