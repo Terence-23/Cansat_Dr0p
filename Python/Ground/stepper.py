@@ -323,7 +323,8 @@ if mag_aim:
                 elif v_rot + v_step_angle < 0:
                     self.v_motor.backwards(1)  
                 
-else:                
+else:         
+    from controller import MyController       
     class Aimbot:
         target_pos = Array('d', [0, -90])
         self_pos = (0, 0)
@@ -375,11 +376,15 @@ else:
             
 
         def __init__(self, pos, h_motor=Stepper(200 * 120 / 19), v_motor=Stepper(200 * 178 / 31, step_pin=digitalio.DigitalInOut(board.D14),
-                    dir_pin=digitalio.DigitalInOut(board.D18)), lsm=LSM303()):
+                    dir_pin=digitalio.DigitalInOut(board.D18)), lsm=LSM303(), controller=MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)):
             self.h_motor = h_motor
             self.v_motor = v_motor
             self.lsm = lsm
             self.self_pos = pos
+            self.ang_s = math.radians(90)
+            self.controller = controller
+            self.controller_process = Process( target=self.controller.listen)
+            self.controller_process.start()
             self.calibrate()
             compass = input("cut the power for compass write c")
             if compass.lower() == 'c':
@@ -388,7 +393,7 @@ else:
                     time.sleep(0.2)
             self.tracker = Process(target=self.track)
             self.tracker.start()
-            
+
 
         @staticmethod
         def calc_antenna_angle(ant_pos, goal_pos, goal_alt, degrees=True):
@@ -416,24 +421,40 @@ else:
             #sys.exit()
             h_step_angle = self.h_motor.step_to_rad(1)
             v_step_angle = self.v_motor.step_to_rad(1)
+            frame_delay = 0.03
+            h_steps_per_frame = self.h_motor.rad_to_step(frame_delay * self.ang_s)
+            v_steps_per_frame = self.v_motor.rad_to_step(frame_delay * self.ang_s)
             while True:
-                alfa, beta = self.calc_antenna_angle(self.self_pos, self.target_pos[:], self.alt_diff.value, degrees=False)
-                beta = beta
-                self.BOF = 0
-                print(f"pitch= {self.pitch}, beta= {beta},  v_rot= {beta - self.pitch}")
+                if self.controller.isR2Pressed:
+                    if self.controller.joystick_hor.value > 0.1 or -self.controller.joystick_hor.value > 0.1:
+                        ang = self.controller.joystick_hor.value * h_steps_per_frame
+                        self.heading += ang
+                        self.h_motor.rotate(ang)
+                    
+                    if self.controller.joystick_vert.value > 0.1 or -self.controller.joystick_vert.value > 0.1:
+                        ang = self.controller.joystick_vert.value * v_steps_per_frame
+                        self.heading += ang
+                        self.v_motor.rotate(ang)
+                        
+                    time.sleep(frame_delay)
+                else:
+                    alfa, beta = self.calc_antenna_angle(self.self_pos, self.target_pos[:], self.alt_diff.value, degrees=False)
+                    beta = beta
+                    self.BOF = 0
+                    print(f"pitch= {self.pitch}, beta= {beta},  v_rot= {beta - self.pitch}")
 
-                h_rot = alfa - self.heading
-                if h_rot - h_step_angle > 0:
-                    self.heading += h_step_angle
-                    self.h_motor.forward(1)
-                elif h_rot + h_step_angle < 0:
-                    self.heading -= h_step_angle
-                    self.h_motor.backwards(1)
-                
-                v_rot = beta - self.pitch
-                if v_rot - v_step_angle > 0:
-                    self.pitch += v_step_angle
-                    self.v_motor.forward(1)#backwards(1)#
-                elif v_rot + v_step_angle < 0:
-                    self.v_motor.backwards(1)#forward(1)#
-                    self.pitch -= v_step_angle  
+                    h_rot = alfa - self.heading
+                    if h_rot - h_step_angle > 0:
+                        self.heading += h_step_angle
+                        self.h_motor.forward(1)
+                    elif h_rot + h_step_angle < 0:
+                        self.heading -= h_step_angle
+                        self.h_motor.backwards(1)
+                    
+                    v_rot = beta - self.pitch
+                    if v_rot - v_step_angle > 0:
+                        self.pitch += v_step_angle
+                        self.v_motor.forward(1)#backwards(1)#
+                    elif v_rot + v_step_angle < 0:
+                        self.v_motor.backwards(1)#forward(1)#
+                        self.pitch -= v_step_angle  
