@@ -149,6 +149,7 @@ class L76X(object):
                                         + (latitude % 1000000)/600000
                             elif(x == 4):
                                 self.Lat_area = data[add+z+1]
+                                if self.Lat_area == 'S': self.Lat = -self.Lat
                             elif(x == 5):
                                 longitude = 0
                                 for k in range(0, BUFFSIZE-1):
@@ -165,6 +166,7 @@ class L76X(object):
 
                             elif(x == 6):
                                 self.Lon_area = data[add+z+1]
+                                if self.Lon_area == 'W': self.Lon = -self.Lon
                                 return#Completion calculation
                         z = z + 1
             add = add + 1
