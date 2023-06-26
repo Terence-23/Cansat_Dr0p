@@ -32,6 +32,6 @@ class MyController(Controller):
         print("Exiting manual mode")
 
 
-controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
+#controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
 # you can start listening before controller is paired, as long as you pair it within the timeout window
-controller.listen(timeout=60)
+#controller.listen(timeout=60)
