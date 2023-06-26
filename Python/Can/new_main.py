@@ -139,7 +139,7 @@ send_q = Queue()
 
 def wake_check(lsm, bme):
 
-    print('wake check')
+    #print('wake check')
     g = 9.82
     alt = 50
     acc = 3*g
@@ -148,24 +148,24 @@ def wake_check(lsm, bme):
                                                 bme: bme.getAltitude() > alt, alt, bme)]
 
     for i, (v, *args) in enumerate(check_fs):
-        print(f"{i} {v.__name__} {args}")
-        print(v(*args))
+        #print(f"{i} {v.__name__} {args}")
+        #print(v(*args))
 
         comms.SD_o.write('WAKE', f'{v.__name__}: {v(*args)}')
         comms.SD_o.write('WAKE', f'{bme.getPress()}')
         if v(*args):
-            print('wake')
+            #print('wake')
             return True
 
-    print('sleep')
+    #print('sleep')
     return False
 
 
 def wake_checker(lsm, bme, sleeping):
-    print('start wake checker')
+    #print('start wake checker')
     while True:
         time .sleep(0.1)
-        print(sleeping.value, 'sleeping')
+        #print(sleeping.value, 'sleeping')
         if sleeping.value and wake_check(lsm, bme):
             comms.SD_o.write(comms.FL_DEBUG, 'auto_wake')
             packet = Packet.create_command_packet(time.time(), Command.WAKE)
@@ -187,7 +187,7 @@ def radio_recv(radio):
 
 def gps_refresh(lat, lon, gpsFix, runCount):
     gps = sensor.L76x()
-    print('after gps init')
+    #print('after gps init')
 
     while True:
         runCount.value += 1

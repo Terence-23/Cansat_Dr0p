@@ -46,7 +46,8 @@ class BME:
         self.rProcess.start()
 
     def refresh(self):
-        while self.sensor.pressure < 980 or self.sensor.pressure > 1100:
+        while self.sensor.pressure < 900 or self.sensor.pressure > 1200:
+            print('wait')
             time.sleep(1)
         
         with open('press.out', 'w') as f:
@@ -64,6 +65,8 @@ class BME:
                 self.alt.value = self.sensor.altitude
                 self.hum.value = self.sensor.humidity
                 
+                assert self.hum.value == self.getHum()
+
                 with open(self.log_path, 'a') as f:
                     f.write(f'{time.time()};{self.temp.value};{self.press.value};{self.hum.value};{self.alt.value}\n')
 

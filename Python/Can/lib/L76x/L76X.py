@@ -101,8 +101,8 @@ class L76X(object):
             # text = text[:2] + "P" + text[3:]
             f.write(data + '\n')
 
-        print (data)
-        print ('\n')
+        #print (data)
+        #print ('\n')
         add=0
         self.Status = 0
         for i in range(0, BUFFSIZE-71):
