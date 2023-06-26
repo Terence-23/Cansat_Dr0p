@@ -11,6 +11,12 @@ class MyController(Controller):
         self.joystick_hor = Value("d", 0)
         self.isR2Pressed = Value("i", 0)
 
+    def on_L3_x_at_rest(self):
+        self.joystick_hor.value = 0
+    def on_L3_y_at_rest(self):
+        self.joystick_vert.value = 0
+
+
     def on_L3_left(self, value):
         self.joystick_hor.value = value / 32767
 

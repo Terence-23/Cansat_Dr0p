@@ -386,6 +386,7 @@ else:
             self.controller_process = Process( target=self.controller.listen)
             self.controller_process.start()
             self.calibrate()
+            print(math.degrees(calc_pitch(*self.lsm.getAcceleration())))
             compass = input("cut the power for compass write c")
             if compass.lower() == 'c':
                 while True:
@@ -421,27 +422,35 @@ else:
             #sys.exit()
             h_step_angle = self.h_motor.step_to_rad(1)
             v_step_angle = self.v_motor.step_to_rad(1)
-            frame_delay = 0.03
+            frame_delay = 0.01
             h_steps_per_frame = self.h_motor.rad_to_step(frame_delay * self.ang_s)
             v_steps_per_frame = self.v_motor.rad_to_step(frame_delay * self.ang_s)
             while True:
-                if self.controller.isR2Pressed:
-                    if self.controller.joystick_hor.value > 0.1 or -self.controller.joystick_hor.value > 0.1:
-                        ang = self.controller.joystick_hor.value * h_steps_per_frame
-                        self.heading += ang
-                        self.h_motor.rotate(ang)
+                if self.controller.isR2Pressed.value:
+                    print('auto')
+                    h_rot = self.controller.joystick_hor.value
+                    if h_rot > 0.1:
+                        self.heading += h_step_angle
+                        self.h_motor.forward(1)
+                    elif h_rot < -0.1:
+                        self.heading -= h_step_angle
+                        self.h_motor.backwards(1)
                     
-                    if self.controller.joystick_vert.value > 0.1 or -self.controller.joystick_vert.value > 0.1:
-                        ang = self.controller.joystick_vert.value * v_steps_per_frame
-                        self.heading += ang
-                        self.v_motor.rotate(ang)
-                        
-                    time.sleep(frame_delay)
+                    v_rot = self.controller.joystick_vert.value
+                    if v_rot > 0.1:
+                        self.pitch -= v_step_angle
+                        self.v_motor.backwards(1)#
+                    elif v_rot < -0.1:
+                        self.v_motor.forward(1)#
+                        self.pitch += v_step_angle
+
+                    print(self.pitch)
+                    #time.sleep(frame_delay)
                 else:
                     alfa, beta = self.calc_antenna_angle(self.self_pos, self.target_pos[:], self.alt_diff.value, degrees=False)
                     beta = beta
                     self.BOF = 0
-                    print(f"pitch= {self.pitch}, beta= {beta},  v_rot= {beta - self.pitch}")
+                    #print(f"pitch= {self.pitch}, beta= {beta},  v_rot= {beta - self.pitch}")
 
                     h_rot = alfa - self.heading
                     if h_rot - h_step_angle > 0:
