@@ -17,8 +17,8 @@ import math
 import ipaddress
 import digitalio, board
 
-UDPIPS = ['192.168.1.100', '192.168.129.41','192.168.1.110']
-UDP_LOCAL_IP = '192.168.129.133'
+UDPIPS = ['192.168.1.100', '192.168.35.42','192.168.1.110']
+UDP_LOCAL_IP = '192.168.35.133'
 UDP_PORT = 2137
 UDP_LOCAL_PORT = 2138
 

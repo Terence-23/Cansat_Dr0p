@@ -11,6 +11,12 @@ class MyController(Controller):
         self.joystick_hor = Value("d", 0)
         self.isR2Pressed = Value("i", 0)
 
+    def on_L3_x_at_rest(self):
+        self.joystick_hor.value = 0
+    def on_L3_y_at_rest(self):
+        self.joystick_vert.value = 0
+
+
     def on_L3_left(self, value):
         self.joystick_hor.value = value / 32767
 
@@ -32,6 +38,6 @@ class MyController(Controller):
         print("Exiting manual mode")
 
 
-controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
+#controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
 # you can start listening before controller is paired, as long as you pair it within the timeout window
-controller.listen(timeout=60)
+#controller.listen(timeout=60)

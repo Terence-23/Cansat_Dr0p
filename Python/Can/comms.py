@@ -90,7 +90,7 @@ class SD:
 
 CS = digitalio.DigitalInOut(board.D22)
 RESET = digitalio.DigitalInOut(board.D27)
-FREQ = 433.6
+FREQ = 433.8
 PWR = 20
 
 
