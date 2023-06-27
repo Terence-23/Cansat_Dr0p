@@ -101,8 +101,8 @@ class LSM303:
     def __init__(self, i2c=board.I2C()) -> None:
         self.accel = adafruit_lsm303_accel.LSM303_Accel(i2c)
         self.mag = adafruit_lis2mdl.LIS2MDL(i2c)
-        self.mag.data_rate = 3
-        self.accel.data_rate = 5
+        self.mag.data_rate = 2
+        self.accel.data_rate = 4
         self.rProcess = Process(target=self.refresh)
         self.rProcess.start()
 
