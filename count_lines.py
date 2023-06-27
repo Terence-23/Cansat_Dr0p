@@ -4,7 +4,7 @@ import glob
 import os
 import traceback
 
-files = glob.glob('**/*.*', root_dir=os.getcwd(), recursive = True)
+files = filter(lambda s: s.split('/')[0] != 'CanSat',glob.glob('**/*.*', root_dir=os.getcwd(), recursive = True))
 # print(files)
 
 python = []
@@ -37,6 +37,7 @@ for i in files:
 
 py_lines = 0
 for i in python:
+    print(i)
     py_lines += len(open(i).readlines())
 
 cpp_lines = 0
@@ -45,7 +46,7 @@ for i in cpp:
     
 data_lines = 0
 for i in data:
-    print(i)
+    # print(i)
     try: data_lines += len(open(i).readlines())
     except Exception as e: pass#traceback.print_exc()
     
