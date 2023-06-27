@@ -1,14 +1,15 @@
+#!/bin/venv python
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right
 import sys
 import math
 from ast import literal_eval as l_eval
 from haversine import Unit, haversine_distance
 from numpy import arctan2 as atan2
 
-
+plt.rc('font', size=15)
 def v_length(x, y, z=None) -> float:
     if z is None:
         return np.sqrt(x*x + y*y)
@@ -88,6 +89,7 @@ def heading(path='Data/raw_data/', start_time=0, end_time=None):
         tmp = [[float(j) for j in i.strip().split(';')] for i in f.readlines()] 
         lsm = list(filter(fun, tmp))
 
+    print(len(lsm))
 
     timestamps = [i[0] for i in lsm]
 
@@ -131,15 +133,17 @@ def pressure(path='Data/raw_data/', start_time=0, end_time=None):
         def fun(a): return a[0] > start_time and a[0] < end_time
 
     with open(path + 'BME.out', 'r') as f:
-        packets = filter(fun, [[float(j) for j in i.strip().split(';')]
-                         for i in f.readlines()])
+        packets = list(filter(fun, [[float(j) for j in i.strip().split(';')]
+                         for i in f.readlines()]))
 
     press = [i[2] for i in packets]
     alts = [i[4] for i in packets]
     timestamps = [i[0] for i in packets]
     packet_num = np.linspace(0, len(alts), len(alts))
+    
+    print(len(packets), len(timestamps), sep=" ")
 
-    deltatime = timestamps[-1] - timestamps[0]
+    deltatime = timestamps[len(timestamps)-1] - timestamps[0]
     polling_rate = len(timestamps) / deltatime
 
     fig, ax = plt.subplots(figsize=(16, 9), layout='constrained')
@@ -172,16 +176,24 @@ def temp_hum(path='Data/raw_data/', start_time=0, end_time=None):
         packets = list(
             filter(fun, [[float(j) for j in i.strip().split(';')] for i in file.readlines()]))
     with open(path + 'dallas.out', 'r') as file:
-        dallas = filter(fun, [[float(j) for j in i.strip().split(';')]
-                        for i in file.readlines()])
+        dallas = list(filter(fun, [[float(j) for j in i.strip().split(';')]
+                        for i in file.readlines()]))
 
     temps = [i[1] for i in dallas]
     timestamps = [i[0] for i in dallas]
+    
+    print("180", len(temps), len(timestamps), sep=" ")
 
-    hums = [packets[bisect_left(packets, [i], key=lambda a: a[0])][3]
-            for i in timestamps]
+    hums = []
+    
+    for  i in timestamps:
+        ind = bisect_left(packets, i, key=lambda a: a[0])
+        if ind >= len(packets): ind = len(packets) -1
+        #print(ind, len(packets), sep=' ')
+        hums.append(packets[ind][3])
+       
     packet_num = np.linspace(0, len(timestamps), len(timestamps))
-    deltatime = timestamps[-1] - timestamps[0]
+    deltatime = timestamps[len(timestamps)-1] - timestamps[0]
     polling_rate = len(timestamps) / deltatime
 
     fig, ax = plt.subplots(figsize=(16, 9), layout='constrained')
@@ -211,13 +223,13 @@ def speeds(path='Data/raw_data/', start_time=0, end_time=None):
     else:
         def fun(a): return a[0] > start_time and a[0] < end_time
 
-    with open(path + 'GPS.out', 'r') as f:
-        gps = filter(fun, ([float(j) for j in i.strip().split(';')]
-                     for i in f.readlines()))
+    with open(path + 'gps.out', 'r') as f:
+        gps = list(filter(fun, ([float(j) for j in i.strip().split(';')]
+                     for i in f.readlines())))
 
     with open(path + 'BME.out', 'r') as f:
-        bme = filter(fun, ([float(j) for j in i.strip().split(';')]
-                     for i in f.readlines()))
+        bme = list(filter(fun, ([float(j) for j in i.strip().split(';')]
+                     for i in f.readlines())))
 
     # prepare intermediate data
     lats = [i[1] for i in gps]
@@ -225,8 +237,14 @@ def speeds(path='Data/raw_data/', start_time=0, end_time=None):
 
     timestamps = [i[0] for i in gps]
 
-    alts = [bme[bisect_left(bme, [i], key=lambda a: a[0])][4]
-            for i in timestamps]
+    alts = []
+    for  i in timestamps:
+        ind = bisect_left(bme, i, key=lambda a: a[0])
+        if ind >= len(bme): ind = len(bme) -1
+        #print(ind, len(bme), sep=' ')
+        alts.append(bme[ind][3])
+     
+    print(len(gps), len(timestamps), sep=" ")
 
     # prepare data
     h_speeds = [0]
@@ -241,7 +259,7 @@ def speeds(path='Data/raw_data/', start_time=0, end_time=None):
 
     packet_num = np.linspace(0, len(lats), len(lats))
 
-    deltatime = timestamps[-1] - timestamps[0]
+    deltatime = timestamps[len(timestamps)-1] - timestamps[0]
     polling_rate = len(timestamps) / deltatime
 
     fig, ax = plt.subplots(figsize=(16, 9), layout='constrained')
@@ -269,15 +287,14 @@ def acceleration(path='Data/raw_data/', start_time=0, end_time=None, start_val=-
         def fun(a): return a[0] > start_time and a[0] < end_time
 
     with open(path + 'LSM.out', 'r') as f:
-        packets = filter(
-            f, ([float(j) for j in i.strip().split(';')] for i in f.readlines()))
+        packets = list(filter(fun, ([float(j) for j in i.strip().split(';')] for i in f.readlines())))
 
-    accs = [v_length(*i[1:4]) for i in packets]
+    accs = [v_length(i[1], i[2], i[3]) for i in packets]
     timestamps = [i[0] for i in packets]
 
     packet_num = np.linspace(start_val, len(accs) + start_val, len(accs))
 
-    deltatime = timestamps[-1] - timestamps[0]
+    deltatime = timestamps[len(timestamps)-1] - timestamps[0]
     polling_rate = len(timestamps) / deltatime
 
     fig, ax = plt.subplots(figsize=(16, 9), layout='constrained')
