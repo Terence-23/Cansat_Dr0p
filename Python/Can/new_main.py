@@ -135,6 +135,9 @@ def acceleration_wake(acceleration, accel: sensor.LSM303()):
 
 event_q = Queue()
 send_q = Queue()
+last_e = None
+last_g = None
+last_b = None
 
 
 def wake_check(lsm, bme):
@@ -173,10 +176,16 @@ def wake_checker(lsm, bme, sleeping):
 
 
 def radio_recv(radio):
+    global last_e,  last_g, last_b
     while True:
+        if not last_e is None:
+            radio.send(last_e)
+            last_e = None
+
         while not send_q.empty():
             try:
-                radio.send(send_q.get(block=False))
+                #radio.send(send_q.get(block=False))
+                send_q.pop()
             except:
                 pass
 
@@ -237,11 +246,23 @@ def main():
 
         comms.SD_o.write(comms.FL_PACKET, packet_b.to_json())
         print(packet_b.to_json())
+        
+        packet_g = f'g;{time.time()};{gps.getLat()};{gps.getLon()};{int(gps.hasFix())}'
+        comms.SD_o.write(comms.FL_PACKET, packet_g)
+        print(packet_g)
+        
+
+
+
+        radio.send(packet_b.encode())
+        radio.send(packet_g)
         try:
-            send_q.put_nowait(packet_b.encode())
+            pass
+            #send_q.put_nowait(packet_b.encode())
+            #send_q.put_nowait(packet_g)
         except:
             comms.SD_o.write(comms.FL_ERROR, 'send queue is full')
-
+        
         # deal with all incoming packets
         while not event_q.empty():
             print('event_q not empty')
@@ -304,11 +325,9 @@ def main():
             # send extended packet
             packet_e = Packet.create_extended_packet(math.floor(
                 time.time()), gps.getLat(), gps.getLon(), *lsm.getAcceleration(), *lsm.getMagnetic())
-
-            try:
-                send_q.put_nowait(packet_e.encode())
-            except:
-                comms.SD_o.write(comms.FL_ERROR, 'send queue is full')
+            
+            last_e = packet_e.encode()
+            
             print(packet_e.to_json())
             comms.SD_o.write(comms.FL_PACKET, packet_e.to_json())
 

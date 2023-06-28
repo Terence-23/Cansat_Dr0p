@@ -9,6 +9,7 @@ class PacketType(Enum):
     COMMAND = 'c'
     BASE = 'b'
     EXTENDED = 'e'
+    GPS = 'g'
 
 class Command(Enum):
     SLEEP = 'sleep'
@@ -64,7 +65,9 @@ class Packet:
             elif packet_type == PacketType.EXTENDED:
                 gps_lat, gps_lon, ax, ay, az, mx, my, mz = map(float, payload)
                 payload = {'lat': gps_lat, 'lon':gps_lon, 'acceleration_x': ax, 'acceleration_y': ay, 'acceleration_z': az, 'magnetometer_x': mx, 'magnetometer_y': my, 'magnetometer_z': mz}
-            
+            elif Packet == PacketType.GPS:
+                lat, lon, fix = map(float, payload)
+                payload = {'lat':lat, 'lon':lon, 'fix':int(fix)}
             return cls(packet_type, timestamp, payload)
         except Exception as e:
             traceback.print_exc()
