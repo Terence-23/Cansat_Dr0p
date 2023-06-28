@@ -185,14 +185,6 @@ def radio_recv(radio):
             event_q.put(text)
 
 
-def gps_refresh(lat, lon, gpsFix, runCount):
-    gps = sensor.L76x()
-    #print('after gps init')
-
-    while True:
-        runCount.value += 1
-        gps.refresh(lat, lon, gpsFix)
-
 
 isturning = False
 
@@ -208,8 +200,6 @@ def main():
     comms.SD_o = comms.SD('Data/log.out')
     sensor.SD_o = comms.SD_o
 
-    lat = Value('d', 0.0)
-    lon = Value('d', 0.0)
     gpsFix = Value('i', 0)
     runCount = Value('i', 0)
 
@@ -221,9 +211,8 @@ def main():
     bme.setSeaLevelPressure(bme.getPress())
     radio = comms.Radio(comms.CS, comms.RESET, comms.PWR, comms.FREQ)
 
-    gps_p = Process(target=gps_refresh, args=(lat, lon, gpsFix, runCount,))
-    gps_p.start()
-
+    gps = sensor.L76x()
+    
     radio_p = Process(target=radio_recv, args=(radio,))
     radio_p.start()
 
@@ -314,7 +303,7 @@ def main():
             print(gpsFix.value)
             # send extended packet
             packet_e = Packet.create_extended_packet(math.floor(
-                time.time()), lat.value, lon.value, *lsm.getAcceleration(), *lsm.getMagnetic())
+                time.time()), gps.getLat(), gps.getLon(), *lsm.getAcceleration(), *lsm.getMagnetic())
 
             try:
                 send_q.put_nowait(packet_e.encode())
@@ -337,7 +326,7 @@ def main():
                 np.array(lsm.getMagnetic()), hardiron_calibration)
             print(mag_corected)
             compass = compass_reading(*mag_corected)
-            rotation = get_rotation((lat.value, lon.value), desiredPos)
+            rotation = get_rotation((gps.getLat(), gps.getLon()), desiredPos)
             rotation_to_do = get_rotation_difference(compass, rotation)
 
             print(

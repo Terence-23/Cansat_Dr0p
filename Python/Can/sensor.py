@@ -153,6 +153,10 @@ class L76x:
 
     def __init__(self):
         self.gps = None
+        self.lat = Value('d', 0.0)
+        self.fix = Value('i', 0)
+        self.lon = Value('d', 0.0)
+        
         while self.gps == None:
             try:
                 self.gps = self.startGPS()
@@ -160,38 +164,41 @@ class L76x:
                 SD_o.write(comms.FL_ERROR, f'{e}')
 
         SD_o.write(comms.FL_GPS, 'GPS ready')
-        self.refresh()
+        self.r_proc = Process(target=self.refresh)
+        self.r_proc.start()
 
-    def refresh(self, lat=Value('d', 0), lon=Value('d', 0), fix=Value('i', 0)):
-        try:
-            self.gps.L76X_Gat_GNRMC()
-            self.l_rf_time = time.time()*1000
-            lat.value = self.gps.Lat
-            lon.value = self.gps.Lon
-            fix.value = self.gps.Status
-            with open(self.path, 'a')as f:
-                f.write(
-                    f'{time.time()};{self.gps.Lat};{self.gps.Lon};{self.gps.Status}\n')
+    def refresh(self,):
+        
+        while True:
+            try:
+                self.gps.L76X_Gat_GNRMC()
+                self.l_rf_time = time.time()*1000
+                self.lat.value = self.gps.Lat
+                self.lon.value = self.gps.Lon
+                self.fix.value = self.gps.Status
+                with open(self.path, 'a')as f:
+                    f.write(
+                        f'{time.time()};{self.gps.Lat};{self.gps.Lon};{self.gps.Status}\n')
 
-        except KeyboardInterrupt as e:
-            raise e
+            except KeyboardInterrupt as e:
+                raise e
 
-        except Exception as e:
-            print(e)
-            SD_o.write(comms.FL_ERROR, f'{e}')
+            except Exception as e:
+                print(e)
+                SD_o.write(comms.FL_ERROR, f'{e}')
 
     def getLat(self):
         # if self.l_rf_time + self.refresh_delay <= time.time() * 1000: self.refresh()
 
-        return self.gps.Lat
+        return self.lat.value
 
     def hasFix(self):
         # if self.l_rf_time + self.refresh_delay <= time.time() * 1000: self.refresh()
-        return self.gps.Status == 1
+        return self.fix.value != 1
 
     def getLon(self):
         # if self.l_rf_time + self.refresh_delay <= time.time() * 1000: self.refresh()
-        return self.gps.Lon
+        return self.lon.value
 
 
 class Dallas:
