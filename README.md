@@ -17,5 +17,3 @@ The probe made by us could be used as:
 
 
 ![dr0p_for_pomagam (3)](https://user-images.githubusercontent.com/64161240/197849294-7d230bf2-6cb9-47b9-872d-0e271b2a48e1.png)
-
-Wyśpię się po śmierci.
